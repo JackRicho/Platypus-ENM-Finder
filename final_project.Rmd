@@ -1,7 +1,7 @@
 ---
 title: "A title for your project"
-author: "Your name and U number"
-date: "Today's date"
+author: "Jack Richardson u7291420"
+date: "4/10/23"
 output:  
     html_document:
         toc: true
@@ -21,7 +21,7 @@ Figures: [The number of figures in your document. You can just count these]
 
 # Location on GitHub
 
-[A URL to the root directory of your final project on GitHub]
+https://github.com/JackRicho/DS4B-final-project
 
 # Data Description
 
