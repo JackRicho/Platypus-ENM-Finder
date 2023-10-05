@@ -5,18 +5,19 @@ Installing and loading packages
 # Latest version of ENMtools on CRAN is not for R 4.3.1
 # We must install ENMtools from authors github
 
-install.packages("devtools")
+# install.packages("devtools")
 library(devtools)
 
-install_github("danlwarren/ENMTools")
+# install_github("danlwarren/ENMTools")
 library(ENMTools)
 
 library(tidyverse)
 
-install.packages("leaflet")
+# install.packages("leaflet")
 library(leaflet)
 
-install.packages("terra")
+# install.packages("terra")
+library(terra)
 ```
 
 
@@ -27,6 +28,7 @@ How to Build an ENM tools species object
 raw_platypus <- read.csv("raw_data/Platypus5-10-23.csv")
 platypusPresence <- raw_platypus %>% 
   select(decimalLongitude, decimalLatitude)
+
 
 ```
 
@@ -53,17 +55,29 @@ platypus <- enmtools.species()
 
 platypus$species.name <- "Ornithorhynchus anatinus"
 platypus$presence.points <- platypusPresence
-platypusSpatVector <- vect(x, geom=c("lon", "lat"), crs="", keepgeom=FALSE)
+#platypus$presence.points <- vect(platypusPresence, geom=c("decimalLongitude", "decimalLatitude"), crs="", keepgeom=FALSE)
 
 # Check format of the enmtools.species
-playpus <- check.species(platypus)
+platypus <- check.species(platypus)
 
 interactive.plot.enmtools.species(platypus)
 ```
 
+```{r}
+platypus.mx <- enmtools.maxent(platypus, env)
+
+platypus.mx$response.plots
+```
+
+Green is distribution of Environmental variable across background (Australia)
+Red is distribution of presence points (frequency of which species appears across those variables)
+Suitability Function our model has estimated (Marginal suitability)
 
 ```{r}
-
+platypus.mx$training.evaluation
 ```
+AUC = Area Under Curve
+
+
 
 
