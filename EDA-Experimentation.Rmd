@@ -1,0 +1,63 @@
+## EDA, Package Experimentation and Prelimanary Question Development
+
+Installing and loading packages
+```{r}
+# Latest version of ENMtools on CRAN is not for R 4.3.1
+# We must install ENMtools from authors github
+
+install.packages("devtools")
+library(devtools)
+
+install_github("danlwarren/ENMTools")
+library(ENMTools)
+```
+
+
+
+How to Build an ENM tools species object
+
+```{r}
+raw_platypus <- read.csv("raw_data/Platypus5-10-23")
+```
+
+
+
+```{r}
+# Get some environmental data
+# Gets bioclim layers
+env <- raster::getData(name = "worldclim", res = 10, var = "bio")
+
+# Trim down the environmental layer to frame data better
+env <- crop(env, extent(110, 155, -45, -8))
+plot(env[[1]])
+```
+
+
+
+```{r}
+# We will do montecarlo tests to test similarities between species and clades and such
+# We package each lineage up in an ENMtools species object
+
+monticola <- enmtools.species()
+# Creates empty object with slots for various values
+
+monticola$species.name <- "Iberolacerta monticola"
+monticola$presence.points <- read.csv("")
+```
+
+
+```{r}
+monticola.gam <- enmtools.gam(iberolacerta.clade$species$monticola,
+
+                              euro.worldclim,
+
+                              test.prop = 0.3,
+
+                              rts.reps = 10)
+
+head(monticola.gam)
+
+
+```
+
+
