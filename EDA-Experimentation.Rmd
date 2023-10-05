@@ -10,6 +10,11 @@ library(devtools)
 
 install_github("danlwarren/ENMTools")
 library(ENMTools)
+
+library(tidyverse)
+
+install.packages("leaflet")
+library(leaflet)
 ```
 
 
@@ -17,7 +22,10 @@ library(ENMTools)
 How to Build an ENM tools species object
 
 ```{r}
-raw_platypus <- read.csv("raw_data/Platypus5-10-23")
+raw_platypus <- read.csv("raw_data/Platypus5-10-23.csv")
+platypusPresence <- raw_platypus %>% 
+  select(decimalLongitude, decimalLatitude)
+
 ```
 
 
@@ -38,25 +46,20 @@ plot(env[[1]])
 # We will do montecarlo tests to test similarities between species and clades and such
 # We package each lineage up in an ENMtools species object
 
-monticola <- enmtools.species()
+platypus <- enmtools.species()
 # Creates empty object with slots for various values
 
-monticola$species.name <- "Iberolacerta monticola"
-monticola$presence.points <- read.csv("")
+platypus$species.name <- "Ornithorhynchus anatinus"
+platypus$presence.points <- platypusPresence
+
+# Check format of the enmtools.species
+playpus <- check.species(platypus)
+
+interactive.plot.enmtools.species(platypus)
 ```
 
 
 ```{r}
-monticola.gam <- enmtools.gam(iberolacerta.clade$species$monticola,
-
-                              euro.worldclim,
-
-                              test.prop = 0.3,
-
-                              rts.reps = 10)
-
-head(monticola.gam)
-
 
 ```
 
