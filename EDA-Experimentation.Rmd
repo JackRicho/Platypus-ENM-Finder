@@ -15,6 +15,8 @@ library(tidyverse)
 
 install.packages("leaflet")
 library(leaflet)
+
+install.packages("terra")
 ```
 
 
@@ -51,6 +53,7 @@ platypus <- enmtools.species()
 
 platypus$species.name <- "Ornithorhynchus anatinus"
 platypus$presence.points <- platypusPresence
+platypusSpatVector <- vect(x, geom=c("lon", "lat"), crs="", keepgeom=FALSE)
 
 # Check format of the enmtools.species
 playpus <- check.species(platypus)
