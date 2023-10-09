@@ -79,5 +79,38 @@ platypus.mx$training.evaluation
 AUC = Area Under Curve
 
 
+```{r}
+ggplot(platypusPresence, aes(x = decimalLongitude, y = decimalLatitude)) +
+  geom_point(size = 0.01) +
+  labs(
+    x = "Longitude",           
+    y = "Latitude",     
+    title = "Title"
+  ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
 
+```{r}
+
+platypus.mx <- enmtools.maxent(platypus, env, test.prop = 0.3)
+
+platypus.mx
+
+platypus.bc <- enmtools.bc(platypus, env, test.prop = 0.3)
+
+platypus.bc
+
+```
+
+
+```{r}
+interactive.plot.enmtools.model(platypus.bc)
+```
+
+
+```{r}
+platypus.dm <- enmtools.dm(platypus, env)
+
+interactive.plot.enmtools.model(platypus.dm)
+```
 
