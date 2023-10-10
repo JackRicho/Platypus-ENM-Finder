@@ -60,7 +60,6 @@ platypus$presence.points <- platypusPresence
 # Check format of the enmtools.species
 platypus <- check.species(platypus)
 
-interactive.plot.enmtools.species(platypus)
 ```
 
 ```{r}
@@ -114,3 +113,79 @@ platypus.dm <- enmtools.dm(platypus, env)
 interactive.plot.enmtools.model(platypus.dm)
 ```
 
+
+```{r}
+# Raster layer
+
+platypus.bc$suitability
+
+```
+
+Anything you can do with an evaluate function in DISMO you can do with:
+```{r}
+platypus.bc$training.evaluation
+```
+
+```{r}
+platypus.bc$response.plots
+```
+
+When the green (Background) plot is not in line with the red and, it means there is a lot of area available that the species does not inhabit, indicating that that factor is important for the species
+
+The blue suitability line is calculated from the bioclim function, and is showing the modeled preference for the species distribution
+
+The following is the BIO variables
+
+BIO1 = Annual Mean Temperature
+
+BIO2 = Mean Diurnal Range (Mean of monthly (max temp - min temp))
+
+BIO3 = Isothermality (BIO2/BIO7) (×100)
+
+BIO4 = Temperature Seasonality (standard deviation ×100)
+
+BIO5 = Max Temperature of Warmest Month
+
+BIO6 = Min Temperature of Coldest Month
+
+BIO7 = Temperature Annual Range (BIO5-BIO6)
+
+BIO8 = Mean Temperature of Wettest Quarter
+
+BIO9 = Mean Temperature of Driest Quarter
+
+BIO10 = Mean Temperature of Warmest Quarter
+
+BIO11 = Mean Temperature of Coldest Quarter
+
+BIO12 = Annual Precipitation
+
+BIO13 = Precipitation of Wettest Month
+
+BIO14 = Precipitation of Driest Month
+
+BIO15 = Precipitation Seasonality (Coefficient of Variation)
+
+BIO16 = Precipitation of Wettest Quarter
+
+BIO17 = Precipitation of Driest Quarter
+
+BIO18 = Precipitation of Warmest Quarter
+
+BIO19 = Precipitation of Coldest Quarter
+
+```{r}
+envBio8 <- env[[8]]
+platypusBio8.bc <- enmtools.bc(platypus, envBio8)
+
+platypusBio8.bc
+
+interactive.plot(platypusBio8.bc)
+```
+
+
+```{r}
+platypus.bc$response.plots[8]
+```
+Explaining bio8: 
+BIO8 = Mean Temperature of Wettest Quarter
