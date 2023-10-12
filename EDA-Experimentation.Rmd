@@ -189,3 +189,52 @@ platypus.bc$response.plots[8]
 ```
 Explaining bio8: 
 BIO8 = Mean Temperature of Wettest Quarter
+
+```{r}
+plot(env[[8]])
+```
+
+Levins Niche Breadth 
+How flat/uniform is this distribution of frequencies
+
+Flat = very broad niche breath (high value) it is occurring consistently the recourse bins
+
+
+## ESRI
+
+```{r}
+# install.packages("rgdal")
+# install.packages("sf")
+# devtools::install_github("gearslaboratory/gdalUtils")
+
+
+library(rgdal)
+library(sf)
+library(gdalUtils)
+
+
+```
+
+```{r}
+# The input file geodatabase
+fgdb <- "D:\\GitHub\\DS4B-final-project\\raw_data\\SurfaceHydrologyLinesRegional.gdb"
+
+# List all feature classes in a file geodatabase
+subset(ogrDrivers(), grepl("GDB", name))
+fc_list <- ogrListLayers(fgdb)
+# This one only works when i give the absolute file path
+print(fc_list)
+```
+
+
+```{r}
+# Read the feature class
+fc <- readOGR(dsn=fgdb,layer="HydroLines")
+
+# Determine the FC extent, projection, and attribute information
+summary(fc)
+
+# View the feature class
+plot(fc)
+```
+
