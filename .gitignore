@@ -50,3 +50,6 @@ rsconnect/
 
 # wc10
 wc10/
+
+# Raw Data
+/raw_data
