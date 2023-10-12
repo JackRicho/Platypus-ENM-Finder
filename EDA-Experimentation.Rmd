@@ -207,13 +207,42 @@ print(fc_list)
 
 
 ```{r}
+
+#This is not working
+
 # Read the feature class
-fc <- readOGR(dsn=fgdb,layer="HydroLines")
+# fc <- readOGR(dsn=fgdb,layer="HydroLines")
 
 # Determine the FC extent, projection, and attribute information
-summary(fc)
+#summary(fc)
 
 # View the feature class
-plot(fc)
+# plot(fc)
 ```
+
+
+Lets try again
+
+```{r}
+# Load the geodatabase
+library(pbapply)
+
+#waterways <- pbapply::pblapply(st_read(fgdb, layer = "HydroLines"), FUN = identity)
+
+#fgdb <- "raw_data/SurfaceHydrologyLinesRegional.gdb"
+#waterways <- st_read(fgdb, layer = "HydroLines")
+
+
+```
+
+
+```{r}
+# gdbtable_path <- "raw_data/SurfaceHydrologyLinesRegional.gdb/a00000030.gdbtable"
+# layer_name <- "HydroLines"
+
+# Read the data
+# data <- readOGR(dsn = gdbtable_path, layer = layer_name)
+
+```
+
 
