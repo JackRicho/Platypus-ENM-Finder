@@ -50,7 +50,68 @@ https://github.com/JackRicho/DS4B-final-project
 
 # Addressing the questions/aims
 
-[This is the *main* section of your work. For example, if you are doing an EDA, this is where you would summarise it. If you are building something like a package or shiny app, a description of that package / app and demonstration of its function(s) would go here. Use appropriate sub-headings.]
+```{r}
+# Loading Libraries
+library(devtools)
+library(ENMTools)
+library(tidyverse)
+library(leaflet)
+library(terra)
+```
+
+
+```{r}
+# Loading Data
+raw_platypus <- read.csv("raw_data/Platypus5-10-23.csv")
+
+# Create DF with only required data
+platypusPresenceDF <- raw_platypus %>% 
+  select(decimalLongitude, decimalLatitude)
+  # I have attempted to create this in the SpatRaster format, however it encounters issues down the line
+
+# Get Bioclim layers (Environmental Data)
+env <- raster::getData(name = "worldclim", res = 10, var = "bio")
+
+# Trim down the environmental layer to frame data better, include Australia only
+env <- crop(env, extent(110, 155, -45, -8))
+
+# Plot annual mean temperature environmental data
+plot(env[[1]])
+  # This ensures the data is loaded correctly. [Will likely remove in final submission]
+```
+
+
+```{r}
+# We package each lineage up in an ENMtools species object
+
+# Creates empty object with slots for various values
+platypus <- enmtools.species()
+
+#Inhabit columns with required data
+platypus$species.name <- "Ornithorhynchus anatinus"
+platypus$presence.points <- platypusPresenceDF
+
+# Check format of the enmtools.species
+platypus <- check.species(platypus)
+  # Populates object with required missing data
+```
+
+Maximum Entropy Models
+```{r}
+# enmTools package has functions that can create maximum entropy models
+platypus.mx <- enmtools.maxent(platypus, env)
+
+# Show 
+platypus.mx$response.plots
+```
+Understanding Maximum Entropy Plots:
+
+Green is distribution of Environmental variable across background, These are the presence of environments that fit this condition across Australia
+
+Red is distribution of presence points (frequency of which species appears across those variables)
+
+Suitability Function our model has estimated (Marginal suitability)
+
 
 # References
 
