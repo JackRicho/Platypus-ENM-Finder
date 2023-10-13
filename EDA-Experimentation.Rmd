@@ -185,9 +185,9 @@ Flat = very broad niche breath (high value) it is occurring consistently the rec
 
 ```{r}
 # install.packages("raster")
-# library(raster)
+library(raster)
 
-# suitabilityRaster <- platypus.bc$suitability
+suitabilityRaster <- platypus.bc$suitability
 
 
 # latitude <- 149.7128
@@ -197,11 +197,17 @@ Flat = very broad niche breath (high value) it is occurring consistently the rec
 # point <- SpatialPoints(cbind(longitude, latitude), proj4string = CRS(proj4string(suitabilityRaster)))
 
 # Extract the suitability value
-# suitability_value <- extract(platypus.bc$suitability, cbind(149.7128, -35.0060))
+suitability_value <- extract(platypus.bc$suitability, cbind(136.467774, -25.107488))
+suitability_value
 
 ```
+149.7128, -25.107488
+  0.00508732
+  0.004400273	
 
-
+136.467774, -25.107488
+  0
+  YESSSS!!!!!!!!!!
 
 
 ## ESRI
