@@ -26,10 +26,11 @@ How to Build an ENM tools species object
 
 ```{r}
 raw_platypus <- read.csv("raw_data/Platypus5-10-23.csv")
-platypusPresence <- raw_platypus %>% 
+platypusPresenceDF <- raw_platypus %>% 
   select(decimalLongitude, decimalLatitude)
 
-
+# Create spatvector rather than dataframe
+# platypusPresence <- vect(platypusPresenceDF, geom=c("decimalLongitude", "decimalLatitude"), crs="", keepgeom=FALSE)
 ```
 
 
@@ -38,6 +39,7 @@ platypusPresence <- raw_platypus %>%
 # Get some environmental data
 # Gets bioclim layers
 env <- raster::getData(name = "worldclim", res = 10, var = "bio")
+# Should i use geodata package instead?
 
 # Trim down the environmental layer to frame data better
 env <- crop(env, extent(110, 155, -45, -8))
@@ -47,14 +49,13 @@ plot(env[[1]])
 
 
 ```{r}
-# We will do montecarlo tests to test similarities between species and clades and such
 # We package each lineage up in an ENMtools species object
 
 platypus <- enmtools.species()
 # Creates empty object with slots for various values
 
 platypus$species.name <- "Ornithorhynchus anatinus"
-platypus$presence.points <- platypusPresence
+platypus$presence.points <- platypusPresenceDF
 #platypus$presence.points <- vect(platypusPresence, geom=c("decimalLongitude", "decimalLatitude"), crs="", keepgeom=FALSE)
 
 # Check format of the enmtools.species
@@ -177,6 +178,30 @@ Levins Niche Breadth
 How flat/uniform is this distribution of frequencies
 
 Flat = very broad niche breath (high value) it is occurring consistently the recourse bins
+
+
+
+## Find the suitability
+
+```{r}
+# install.packages("raster")
+# library(raster)
+
+# suitabilityRaster <- platypus.bc$suitability
+
+
+# latitude <- 149.7128
+# longitude <- -35.0060
+
+# Create a SpatialPoints object for your location
+# point <- SpatialPoints(cbind(longitude, latitude), proj4string = CRS(proj4string(suitabilityRaster)))
+
+# Extract the suitability value
+# suitability_value <- extract(platypus.bc$suitability, cbind(149.7128, -35.0060))
+
+```
+
+
 
 
 ## ESRI
