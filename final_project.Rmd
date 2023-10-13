@@ -64,6 +64,22 @@ library(terra)
 # Loading Data
 raw_platypus <- read.csv("raw_data/Platypus5-10-23.csv")
 
+# Create Example Dataframe
+exPlatypusPresence <- data.frame(
+  decimalLongitude = c(
+    144.2939, 144.3134, 144.3205, 144.0553, 144.2675,
+    144.3138, 143.7592, 144.3011, 144.2751, 144.2680,
+    143.6186, 144.3202, 147.3429, 141.9596, 145.8290,
+    147.6687, 145.2526, 144.5134, 143.7181, 147.5784
+  ),
+  decimalLatitude = c(
+    -38.15573, -38.14578, -38.15364, -38.09789, -38.14520,
+    -38.14503, -38.55246, -38.15016, -38.09380, -38.14564,
+    -38.55681, -38.15415, -37.60680, -36.29010, -37.25910,
+    -36.78980, -37.17330, -36.78410, -37.06260, -37.11190
+  )
+)
+
 # Create DF with only required data
 platypusPresenceDF <- raw_platypus %>% 
   select(decimalLongitude, decimalLatitude)
@@ -112,7 +128,28 @@ Red is distribution of presence points (frequency of which species appears acros
 
 Suitability Function our model has estimated (Marginal suitability)
 
+```{r}
+# See Maximum Entropy Data evaluation
+platypus.mx$training.evaluation
+```
+
+BioClim Model
+```{r}
+# Use enmTools to create a bioclim model
+platypus.bc <- enmtools.bc(platypus, env, test.prop = 0.3)
+  # Bioclim uses the presence of observed insances and analyses them in relation to our 19 climatic variables to create a suitability plot
+  # test.prop sets aside 30% of our data, allowing us to assess the accuracy of the model
+
+# Create an interactive plot to view the model
+interactive.plot.enmtools.model(platypus.bc)
+
+# library(htmlwidgets)
+# saveWidget(platypus.bc, file = 'D:\\GitHub\\DS4B-final-project\\processed_data\\BioclimExport')
+```
+
 
 # References
 
 [References you have cited throughout your text]
+
+
