@@ -256,3 +256,77 @@ plot(waterData)
 ## Rivers Australia
 
 
+```{r}
+ogrListLayers("raw_data/rivers_australia_37252")
+
+raw_rivers <- sf::st_read(dsn = "raw_data/rivers_australia_37252", layer = "rivers_australia_37252")
+plot(raw_rivers)
+```
+
+```{r}
+geometry_column <- raw_rivers$geometry
+
+coordinates <- st_coordinates(geometry_column)
+latitudes <- coordinates[, "Y"]
+longitudes <- coordinates[, "X"]
+
+latitudesDF <- as.data.frame(latitudes)
+longitudesDF <- as.data.frame(longitudes)
+
+riversLatLong <- latitudesDF
+riversLatLong <- riversLatLong %>% 
+  mutate()
+
+ggplot(riversLatLong, aes(x = longitudes$longitudes, y = latitudes)) + 
+  geom_point(size = 0.1)
+  
+```
+
+Plenty of datapoints
+
+```{r}
+# Start with nothing
+
+# Separate geometry from raw_rivers
+geometry_column <- raw_rivers$geometry
+
+# Create blank dataframe to add data to
+extractRivers <- data.frame(matrix(ncol=5,nrow=0, dimnames=list(NULL, c("ARCID", "decimalLongitude", "decimalLatitude", "MAJ_NAME", "SUB_NAME"))))
+
+
+
+
+for (x in 1:nrow(raw_rivers)) {
+
+  # Unnest coordinates from list
+  coordinates <- st_coordinates(geometry_column[x])
+  
+  for (y in 1:nrow(coordinates)) {
+    tempDF <- data.frame(
+      "ARCID" = raw_rivers[[x, "ARCID"]], 
+      "decimalLongitude" = coordinates[y, "Y"], 
+      "decimalLatitude" = coordinates[y, "X"], 
+      "MAJ_NAME" = raw_rivers[[x, "MAJ_NAME"]], 
+      "SUB_NAME" = raw_rivers[[x, "SUB_NAME"]])
+    
+    # use rbind() to add row to bottom of dataframe
+    extractRivers <- rbind(extractRivers, tempDF)
+    
+  }
+} 
+
+
+
+nrow(extractRivers)
+# 21281
+
+nrow()
+coordinates <- st_coordinates(geometry_column)
+latitudes <- coordinates[, "Y"]
+longitudes <- coordinates[, "X"]
+
+latitudesDF <- as.data.frame(latitudes)
+longitudesDF <- as.data.frame(longitudes)
+```
+
+
