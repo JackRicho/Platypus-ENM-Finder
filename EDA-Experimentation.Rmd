@@ -198,7 +198,7 @@ suitabilityRaster <- platypus.bc$suitability
 
 # Extract the suitability value
 suitability_value <- extract(platypus.bc$suitability, cbind(136.467774, -25.107488))
-suitability_value
+print(suitability_value)
 
 ```
 149.7128, -25.107488
@@ -213,67 +213,46 @@ suitability_value
 ## ESRI
 
 ```{r}
-# install.packages("rgdal")
-# install.packages("sf")
-# devtools::install_github("gearslaboratory/gdalUtils")
-
-
-library(rgdal)
 library(sf)
-library(gdalUtils)
+library(rgdal)
 
+ogrListLayers("raw_data/SurfaceHydrologyPointsRegional.gdb")
 
+raw_water <- sf::st_read(dsn = "raw_data/SurfaceHydrologyPointsRegional.gdb", layer = "HydroPoints")
+
+plot(raw_water)
 ```
 
-```{r}
-# The input file geodatabase
-fgdb <- "D:\\GitHub\\DS4B-final-project\\raw_data\\SurfaceHydrologyLinesRegional.gdb"
-
-# List all feature classes in a file geodatabase
-subset(ogrDrivers(), grepl("GDB", name))
-fc_list <- ogrListLayers(fgdb)
-# This one only works when i give the absolute file path
-print(fc_list)
-```
 
 
 ```{r}
-
-#This is not working
-
-# Read the feature class
-# fc <- readOGR(dsn=fgdb,layer="HydroLines")
-
-# Determine the FC extent, projection, and attribute information
-#summary(fc)
-
-# View the feature class
-# plot(fc)
+print(table(water$FEATURETYPE))
 ```
 
-
-Lets try again
+Platypus can live only in freshwater rivers. As such we can remove the following points:
+- Bore
+- Swimming Pool
+- Gnamma holes
+- Rockholes (too small)
+- Water storage point
+- Lock
+- Water Tank
 
 ```{r}
-# Load the geodatabase
-library(pbapply)
+library(dplyr)
 
-#waterways <- pbapply::pblapply(st_read(fgdb, layer = "HydroLines"), FUN = identity)
+pointsKeep <- c("Native Well", "Spring", "Waterfall Point", "Dam", "Pool", "Waterhole")
 
-#fgdb <- "raw_data/SurfaceHydrologyLinesRegional.gdb"
-#waterways <- st_read(fgdb, layer = "HydroLines")
+waterData <- filter(raw_water, FEATURETYPE == pointsKeep)
 
-
+print(table(waterData$FEATURETYPE))
 ```
-
 
 ```{r}
-# gdbtable_path <- "raw_data/SurfaceHydrologyLinesRegional.gdb/a00000030.gdbtable"
-# layer_name <- "HydroLines"
-
-# Read the data
-# data <- readOGR(dsn = gdbtable_path, layer = layer_name)
-
+plot(waterData)
 ```
+
+
+## Rivers Australia
 
 
