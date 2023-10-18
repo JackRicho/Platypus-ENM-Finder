@@ -293,7 +293,7 @@ geometry_column <- raw_rivers$geometry
 # Create blank dataframe to add data to
 extractRivers <- data.frame(matrix(ncol=5,nrow=0, dimnames=list(NULL, c("ARCID", "decimalLongitude", "decimalLatitude", "MAJ_NAME", "SUB_NAME"))))
 
-
+headRivers <- head(raw_rivers)
 
 
 for (x in 1:nrow(raw_rivers)) {
@@ -303,17 +303,22 @@ for (x in 1:nrow(raw_rivers)) {
   
   for (y in 1:nrow(coordinates)) {
     tempDF <- data.frame(
-      "ARCID" = raw_rivers[[x, "ARCID"]], 
+      "ARCID" = as.integer(raw_rivers[[x, "ARCID"]]), 
       "decimalLongitude" = coordinates[y, "Y"], 
       "decimalLatitude" = coordinates[y, "X"], 
       "MAJ_NAME" = raw_rivers[[x, "MAJ_NAME"]], 
       "SUB_NAME" = raw_rivers[[x, "SUB_NAME"]])
     
     # use rbind() to add row to bottom of dataframe
-    extractRivers <- rbind(extractRivers, tempDF)
+  headRiversExtractRivers <- rbind(headRiversExtractRivers, tempDF)
     
   }
 } 
+
+
+
+# Why did this work. It should not have worked
+
 
 
 
@@ -329,4 +334,70 @@ latitudesDF <- as.data.frame(latitudes)
 longitudesDF <- as.data.frame(longitudes)
 ```
 
+
+```{r}
+ggplot(headRiversExtractRivers, aes(x = decimalLatitude, y = decimalLongitude)) +
+  geom_point()
+```
+
+```{r}
+write.csv(headRiversExtractRivers, "processed_data/tidied_rivers_extract_example.csv", sep = " ")
+```
+
+
+
+
+## Using Haversine to find the nearest river:
+
+```{r}
+# Sample data frame with river points
+river_data <- data.frame(
+  latitude = c(42.361145, 42.360309, 42.359943, 42.359255, 42.358877),
+  longitude = c(-71.057083, -71.056835, -71.056510, -71.056396, -71.056089)
+)
+
+# Your current latitude and longitude
+current_latitude <- 42.360162
+current_longitude <- -71.057243
+
+# Function to calculate Haversine distance
+nearestRiver <- function(lat1, lon1, lat2, lon2) {
+  # Radius of the Earth in km
+  earthRadius <- 6371
+  
+  # Convert degrees to radians
+  lat1 <- lat1 * pi / 180
+  lon1 <- lon1 * pi / 180
+  lat2 <- lat2 * pi / 180
+  lon2 <- lon2 * pi / 180
+  
+  # Haversine formula
+  dlat <- lat2 - lat1
+  dlon <- lon2 - lon1
+  a <- sin(dlat/2)^2 + cos(lat1) * cos(lat2) * sin(dlon/2)^2
+  c <- 2 * atan2(sqrt(a), sqrt(1-a))
+  distance <- earthRadius * c
+  
+  return(distance)
+}
+
+# Calculate distances and find the nearest point
+distances <- sapply(1:nrow(river_data), function(i) {
+  haversine(current_latitude, current_longitude, river_data$latitude[i], river_data$longitude[i])
+})
+
+# Find the index of the minimum distance
+nearest_point_index <- which.min(distances)
+
+# Get the nearest point
+nearest_point <- river_data[nearest_point_index, ]
+
+# Print the nearest point and distance
+cat("Nearest Point:\n")
+cat("Latitude:", nearest_point$latitude, "\n")
+cat("Longitude:", nearest_point$longitude, "\n")
+cat("Distance (in km):", distances[nearest_point_index], "\n")
+
+
+```
 
