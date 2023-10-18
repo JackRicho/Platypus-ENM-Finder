@@ -12,41 +12,84 @@ output:
         highlight: pygments
         fig_width: 8
         fig_height: 4
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 # Word/figure count
 
-Words: [The number of words in your document, calculated using the word_count() function at the end of this document]
-Figures: [The number of figures in your document. You can just count these]
+Words: [The number of words in your document, calculated using the
+word_count() function at the end of this document] Figures: [The number
+of figures in your document. You can just count these]
 
 # Location on GitHub
 
-https://github.com/JackRicho/DS4B-final-project
+<https://github.com/JackRicho/DS4B-final-project>
 
 # Data Description
 
-[A brief (~100-200 words should be more than enough) description of the dataset, referencing any key publications that go with it]
+[A brief (\~100-200 words should be more than enough) description of the
+dataset, referencing any key publications that go with it]
 
 # Questions/Aims
 
-[A brief section which first states and then justifies the questions/aims of your EDA. Must provide evidence of independent research into what has been done before on these questions/aims. See above for examples.]
+This project has 2 aims:
+
+-   To create a species distribution model of Platypus using the bioclim
+    model.
+
+-   To create a tool whereby users can input a location and they are
+    told the suitability of that place to platypus habitation, and are
+    told the nearest river where they may be able to find platypus
 
 # Raw data
 
-[Explains how and where to get the exact raw data you got]
-[Is reproducible by a person (required) and a machine (ideally)]
+[Explains how and where to get the exact raw data you got] [Is
+reproducible by a person (required) and a machine (ideally)]
+
+Platypus Data: Available through Atlas of Living Australia. Search:
+Ornithorhynchus anatinus
+
+available here:
+
+<https://bie.ala.org.au/species/https://biodiversity.org.au/afd/taxa/ac61fd14-4950-4566-b384-304bd99ca75f>
+
+```{r}
+# Read Platypus Data
+raw_platypus <- read.csv("raw_data/Platypus5-10-23.csv")
+
+```
+
+Rivers Data: Available through Food and Agriculture Organization of the
+United Nations: /AQUASTAT/Rivers of Australia and New Zealand
+
+available here:
+<https://data.apps.fao.org/catalog/iso/6a53d768-1e20-46ea-92a8-c4040286057d>
+
+```{r}
+# Read Rivers Data
+
+```
+
 
 # Data wrangling
 
-[R chunks and prose which:]
-[Tidies up your raw data, outputs tidied_data.csv]
-[Cleans up your tidied data, outputs cleaned_data.csv]
+[R chunks and prose which:] [Tidies up your raw data, outputs
+tidied_data.csv] [Cleans up your tidied data, outputs cleaned_data.csv]
+
+```{r}
+
+```
+
+
 
 # Sanity checks
 
 [R chunks and prose which perform sanity checks on your cleaned data]
-[Remember that this really just summarises that your data are OK after you've cleaned them]
-[Most of the real sanity checks and data cleaning go on in the data_cleaning.Rmd file]
+[Remember that this really just summarises that your data are OK after
+you've cleaned them] [Most of the real sanity checks and data cleaning
+go on in the data_cleaning.Rmd file]
 
 # Addressing the questions/aims
 
@@ -58,7 +101,6 @@ library(tidyverse)
 library(leaflet)
 library(terra)
 ```
-
 
 ```{r}
 # Loading Data
@@ -96,7 +138,6 @@ plot(env[[1]])
   # This ensures the data is loaded correctly. [Will likely remove in final submission]
 ```
 
-
 ```{r}
 # We package each lineage up in an ENMtools species object
 
@@ -113,6 +154,7 @@ platypus <- check.species(platypus)
 ```
 
 Maximum Entropy Models
+
 ```{r}
 # enmTools package has functions that can create maximum entropy models
 platypus.mx <- enmtools.maxent(platypus, env)
@@ -120,11 +162,15 @@ platypus.mx <- enmtools.maxent(platypus, env)
 # Show 
 platypus.mx$response.plots
 ```
+
 Understanding Maximum Entropy Plots:
 
-Green is distribution of Environmental variable across background, These are the presence of environments that fit this condition across Australia
+Green is distribution of Environmental variable across background, These
+are the presence of environments that fit this condition across
+Australia
 
-Red is distribution of presence points (frequency of which species appears across those variables)
+Red is distribution of presence points (frequency of which species
+appears across those variables)
 
 Suitability Function our model has estimated (Marginal suitability)
 
@@ -134,6 +180,7 @@ platypus.mx$training.evaluation
 ```
 
 BioClim Model
+
 ```{r}
 # Use enmTools to create a bioclim model
 platypus.bc <- enmtools.bc(platypus, env, test.prop = 0.3)
@@ -147,9 +194,6 @@ interactive.plot.enmtools.model(platypus.bc)
 # saveWidget(platypus.bc, file = 'D:\\GitHub\\DS4B-final-project\\processed_data\\BioclimExport')
 ```
 
-
 # References
 
 [References you have cited throughout your text]
-
-
