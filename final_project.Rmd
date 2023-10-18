@@ -51,6 +51,19 @@ This project has 2 aims:
     told the suitability of that place to platypus habitation, and are
     told the nearest river where they may be able to find platypus
 
+# Loading Libraries
+```{r}
+library(sf)
+library(rgdal)
+library(dplyr)
+library(devtools)
+library(ENMTools)
+library(tidyverse)
+library(leaflet)
+library(terra)
+```
+
+
 # Raw data
 
 [Explains how and where to get the exact raw data you got] [Is
@@ -78,10 +91,6 @@ available here:
 <https://data.apps.fao.org/catalog/iso/6a53d768-1e20-46ea-92a8-c4040286057d>
 
 ```{r}
-# Load Required Package
-library(sf)
-library(rgdal)
-
 # Find Rivers Layer
 ogrListLayers("raw_data/rivers_australia_37252")
 
@@ -117,29 +126,39 @@ Clean platypus Data
 
 Clean Rivers Data
 ```{r}
-library(dplyr)
-
 # View rivers by grouped area
 raw_rivers %>% count(MAJ_NAME)
 ```
 The following areas have no known sightings of platypus, and will thus be filtered from data to lessen computational load:
 
-- Australia, Interior
 - Australia, North Coast
 - Australia, West Coast
 - New Zealand
 - South Pacific Islands
 
+Australia, interior slightly overlaps with some recorded sightings of platypus, so should be included in the dataset
+
 ```{r}
 ausRegionKeep <- c(
   "Australia, East Coast", 
-  "Australia, South Coast", 
+  "Australia, South Coast",
+  "Australia, Interior", 
   "Murray - Darling", 
   "Tasmania")
 
 limited_raw_rivers <- filter(raw_rivers, MAJ_NAME == ausRegionKeep)
 
 limited_raw_rivers %>% count(MAJ_NAME)
+```
+
+Environmental data
+```{r}
+# Trim down the environmental layer to frame data better, include Australia only
+env <- crop(env, extent(110, 155, -45, -8))
+
+# Plot annual mean temperature environmental data
+plot(env[[1]])
+  # This ensures the data is loaded correctly. [Will likely remove in final submission]
 ```
 
 
@@ -153,15 +172,6 @@ go on in the data_cleaning.Rmd file]
 # Addressing the questions/aims
 
 ```{r}
-# Loading Libraries
-library(devtools)
-library(ENMTools)
-library(tidyverse)
-library(leaflet)
-library(terra)
-```
-
-```{r}
 # Loading Data
 raw_platypus <- read.csv("raw_data/Platypus5-10-23.csv")
 
@@ -171,15 +181,7 @@ platypusPresenceDF <- raw_platypus %>%
   select(decimalLongitude, decimalLatitude)
   # I have attempted to create this in the SpatRaster format, however it encounters issues down the line
 
-# Get Bioclim layers (Environmental Data)
-env <- raster::getData(name = "worldclim", res = 10, var = "bio")
 
-# Trim down the environmental layer to frame data better, include Australia only
-env <- crop(env, extent(110, 155, -45, -8))
-
-# Plot annual mean temperature environmental data
-plot(env[[1]])
-  # This ensures the data is loaded correctly. [Will likely remove in final submission]
 ```
 
 ```{r}
