@@ -32,6 +32,14 @@ of figures in your document. You can just count these]
 [A brief (\~100-200 words should be more than enough) description of the
 dataset, referencing any key publications that go with it]
 
+This project uses 3 datasets:
+
+Atlas of Living Australias most current (as of 18/10/22) platypus occurrence records with no exclusions to data. Collected through a variety of research, conservation work and citizen science
+
+Bioclimatic environment data that represents annual trends in climate, rainfall and seasonalty. Standard set of variables used in Species Distribution Modeling
+
+Rivers Dataset containing geospatial point locations of Australia and New Zealand Rivers derived from World Wildlife Fund's (WWF) HydroSHEDS drainage direction layer and a stream network layer.
+
 # Questions/Aims
 
 This project has 2 aims:
@@ -49,27 +57,43 @@ This project has 2 aims:
 reproducible by a person (required) and a machine (ideally)]
 
 Platypus Data: Available through Atlas of Living Australia. Search:
-Ornithorhynchus anatinus
+*Ornithorhynchus anatinus*
 
 available here:
-
 <https://bie.ala.org.au/species/https://biodiversity.org.au/afd/taxa/ac61fd14-4950-4566-b384-304bd99ca75f>
+
+acquired 18-10-2023 with no data exclusions.
+Renamed (Speciescommonname)DD-MM-YY i.e. Platypus18-10-23
 
 ```{r}
 # Read Platypus Data
-raw_platypus <- read.csv("raw_data/Platypus5-10-23.csv")
-
+raw_platypus <- read.csv("raw_data/Platypus18-10-23.csv")
 ```
 
 Rivers Data: Available through Food and Agriculture Organization of the
 United Nations: /AQUASTAT/Rivers of Australia and New Zealand
+In ERSI data format (geospatial data)
 
 available here:
 <https://data.apps.fao.org/catalog/iso/6a53d768-1e20-46ea-92a8-c4040286057d>
 
 ```{r}
-# Read Rivers Data
+# Load Required Package
+library(sf)
+library(rgdal)
 
+# Find Rivers Layer
+ogrListLayers("raw_data/rivers_australia_37252")
+
+# Read Rivers Data
+raw_rivers <- sf::st_read(dsn = "raw_data/rivers_australia_37252", layer = "rivers_australia_37252")
+```
+
+Environment Data:
+Environment data available through raster package
+```{r}
+# Get Environment Data
+env <- raster::getData(name = "worldclim", res = 10, var = "bio")
 ```
 
 
@@ -78,10 +102,45 @@ available here:
 [R chunks and prose which:] [Tidies up your raw data, outputs
 tidied_data.csv] [Cleans up your tidied data, outputs cleaned_data.csv]
 
+Clean platypus Data
 ```{r}
+# Remove duplicates
+
+# Remove Spatial Suspects
+
+# Remove Location Uncertianty
+
+# Remove Absence Records
+
 
 ```
 
+Clean Rivers Data
+```{r}
+library(dplyr)
+
+# View rivers by grouped area
+raw_rivers %>% count(MAJ_NAME)
+```
+The following areas have no known sightings of platypus, and will thus be filtered from data to lessen computational load:
+
+- Australia, Interior
+- Australia, North Coast
+- Australia, West Coast
+- New Zealand
+- South Pacific Islands
+
+```{r}
+ausRegionKeep <- c(
+  "Australia, East Coast", 
+  "Australia, South Coast", 
+  "Murray - Darling", 
+  "Tasmania")
+
+limited_raw_rivers <- filter(raw_rivers, MAJ_NAME == ausRegionKeep)
+
+limited_raw_rivers %>% count(MAJ_NAME)
+```
 
 
 # Sanity checks
@@ -106,21 +165,6 @@ library(terra)
 # Loading Data
 raw_platypus <- read.csv("raw_data/Platypus5-10-23.csv")
 
-# Create Example Dataframe
-exPlatypusPresence <- data.frame(
-  decimalLongitude = c(
-    144.2939, 144.3134, 144.3205, 144.0553, 144.2675,
-    144.3138, 143.7592, 144.3011, 144.2751, 144.2680,
-    143.6186, 144.3202, 147.3429, 141.9596, 145.8290,
-    147.6687, 145.2526, 144.5134, 143.7181, 147.5784
-  ),
-  decimalLatitude = c(
-    -38.15573, -38.14578, -38.15364, -38.09789, -38.14520,
-    -38.14503, -38.55246, -38.15016, -38.09380, -38.14564,
-    -38.55681, -38.15415, -37.60680, -36.29010, -37.25910,
-    -36.78980, -37.17330, -36.78410, -37.06260, -37.11190
-  )
-)
 
 # Create DF with only required data
 platypusPresenceDF <- raw_platypus %>% 
