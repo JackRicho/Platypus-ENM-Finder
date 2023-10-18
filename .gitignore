@@ -53,3 +53,6 @@ wc10/
 
 # Raw Data
 /raw_data
+
+# Processed Data
+/processed_data
