@@ -265,7 +265,7 @@ plot(raw_rivers)
 
 ```{r}
 # Isolate column with each rivers lat/long points in list
-geometry_column <- raw_rivers$geometry
+geometry_column <- rivers$geometry
 
 # Extract Latitudes and Longitudes into new objects
 coordinates <- st_coordinates(geometry_column)
@@ -283,8 +283,9 @@ riversLatLong <- riversLatLong %>%
 
 # Plot points to ensure large amount of rivers in australia contained within dataset
 ggplot(riversLatLong, aes(x = longitudes, y = latitudes)) + 
-  geom_point(size = 0.1)
-  
+  geom_point(size = 0.1) +
+  geom_point(data = platypus, aes(x = decimalLongitude, y = decimalLatitude), size = 0.1, colour = 'red')
+
 ```
 
 Plenty of datapoints
