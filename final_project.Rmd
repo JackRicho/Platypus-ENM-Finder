@@ -69,6 +69,7 @@ library(terra)
 [Explains how and where to get the exact raw data you got] [Is
 reproducible by a person (required) and a machine (ideally)]
 
+## Platypus Observation Data
 Platypus Data: Available through Atlas of Living Australia. Search:
 *Ornithorhynchus anatinus*
 
@@ -83,6 +84,7 @@ Renamed (Speciescommonname)DD-MM-YY i.e. Platypus18-10-23
 raw_platypus <- read.csv("raw_data/Platypus18-10-23.csv")
 ```
 
+## Rivers of Australia & NZ Data
 Rivers Data: Available through Food and Agriculture Organization of the
 United Nations: /AQUASTAT/Rivers of Australia and New Zealand
 In ERSI data format (geospatial data)
@@ -153,7 +155,33 @@ ausRegionKeep <- c(
 
 rivers <- filter(raw_rivers, MAJ_NAME == ausRegionKeep)
 
-# limited_raw_rivers %>% count(MAJ_NAME)
+
+# Extracting the point data
+  # Note. This will take several minutes to complete. To see progress, uncomment bellow code before running
+for (x in 1:nrow(rivers)) {
+
+  # Unnest coordinates from list
+  coordinates <- st_coordinates(geometry_column[x])
+  
+  for (y in 1:nrow(coordinates)) {
+    tempDF <- data.frame(
+      "ARCID" = as.integer(rivers[[x, "ARCID"]]), 
+      "decimalLongitude" = coordinates[y, "Y"], 
+      "decimalLatitude" = coordinates[y, "X"], 
+      "MAJ_NAME" = rivers[[x, "MAJ_NAME"]], 
+      "SUB_NAME" = rivers[[x, "SUB_NAME"]])
+    
+    # use rbind() to add row to bottom of dataframe
+  SortedRivers <- rbind(SortedRivers, tempDF)
+  
+  # Uncomment below code to see progress
+  ## cat("Progress:   ", x, " of " nrow(rivers), "      ")
+  }
+} 
+
+ggplot(SortedRivers, aes(x = decimalLatitude, y = decimalLongitude, colour = MAJ_NAME)) +
+  geom_point()
+
 ```
 
 Environmental data
@@ -261,9 +289,12 @@ riversLatLong <- riversLatLong %>%
 
 # Plot points to ensure large amount of rivers in australia contained within dataset
 # And overlay platypus sightings to ensure most areas are located close to findable river
-ggplot(riversLatLong, aes(x = longitudes, y = latitudes)) + 
-  geom_point(size = 0.1) +
+
+rivers_map_with_points <- map +
+  geom_point(data = riversLatLong, aes(x = longitudes, y = latitudes), size = 0.1) +
   geom_point(data = platypus, aes(x = decimalLongitude, y = decimalLatitude), size = 0.1, colour = 'red')
+
+print(rivers_map_with_points)
 ```
 
 
@@ -299,6 +330,7 @@ platypus.mx <- enmtools.maxent(platypusENM, env)
 
 # Show 
 platypus.mx$response.plots
+
 ```
 
 Understanding Maximum Entropy Plots:
@@ -327,10 +359,25 @@ platypus.bc <- enmtools.bc(platypusENM, env, test.prop = 0.3)
 
 # Create an interactive plot to view the model
 interactive.plot.enmtools.model(platypus.bc)
-
-# library(htmlwidgets)
-# saveWidget(platypus.bc, file = 'D:\\GitHub\\DS4B-final-project\\processed_data\\BioclimExport')
 ```
+
+Getting input to find platypus suitability
+
+```{r}
+# Current Location platypus suitability
+inputLatitude <- -35.272240
+inputLongitude <- 149.121528
+
+suitability_value <- extract(platypus.bc$suitability, cbind(inputLongitude, inputLatitude))
+print(suitability_value)
+```
+
+
+```{r}
+# Current Location nearest river
+
+```
+
 
 # References
 
