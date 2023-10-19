@@ -386,7 +386,8 @@ There are two important things to note here: There is little area of Australian 
 
 What is going on here comes down to geography and precipiation. In the North (North QLD area) where monsoon conditions are present, the wettest quater of the year is around summer, which is also the hottest. Further south, in NSW and Vic, the wettest months of the year is around winter, which is much colder. Finally, the large platypus-absent hot area would be Australia's arid, dry interior, which has its wettest months in summer.
 
-This plot is useful in highlighting a flaw in the bioclim model. It is less robust than a model such as GLM (Generalized Linear Modelling)
+This plot is useful in highlighting a flaw in the bioclim model. It is less robust than a model such as GLM (Generalized Linear Modelling), which may be able to account for the differing groups Regardless, for the scope of this project, bioclim is the more appropriate due to its less complex and computationally challenging nature.
+
 
 ## Training Evaluation
 ```{r}
