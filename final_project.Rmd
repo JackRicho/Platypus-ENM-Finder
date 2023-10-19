@@ -166,25 +166,6 @@ SortedRivers <- data.frame(matrix(ncol = 5, nrow = 0, dimnames = list(NULL, c("A
 # Isolate the river geometry (list form of each point of river)
 geometry_column <- rivers$geometry
 
-# # Extract Latitudes and Longitudes into new objects
-# coordinates <- st_coordinates(geometry_column)
-# latitudes <- coordinates[, "Y"]
-# longitudes <- coordinates[, "X"]
-
-# # Convert from list to dataframe
-# latitudesDF <- as.data.frame(latitudes)
-# longitudesDF <- as.data.frame(longitudes)
-# 
-# # Merge into one dataframe
-# riversLatLong <- latitudesDF
-# riversLatLong <- riversLatLong %>%
-#   mutate(longitudes = longitudesDF$longitudes)
-
-
-
-###
-
-
 # Extracting the point data
   # Note. This will take up to 10 minutes to complete. To see progress, uncomment bellow code before running
 for (x in 1:nrow(rivers)) {
