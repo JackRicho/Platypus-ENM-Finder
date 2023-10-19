@@ -114,29 +114,29 @@ tidied_data.csv] [Cleans up your tidied data, outputs cleaned_data.csv]
 Clean platypus Data
 ```{r}
 # Remove duplicates
+cleaning_platypus <- raw_platypus %>%
+  distinct(eventDate, decimalLatitude, decimalLongitude, recordedBy, .keep_all = TRUE)
+  # From 20077
+  # To 18662
+  # Removed 1415 results
 
-# Remove Spatial Suspects
+# Remove absence
+cleaning_platypus <- filter(cleaning_platypus, occurrenceStatus == "PRESENT")
 
-# Remove Location Uncertianty
-
-# Remove Absence Records
-
-
+# Remove Location Uncertianty over 10,000m
+cleaning_platypus <- filter(cleaning_platypus, coordinateUncertaintyInMeters <= 10000)
 ```
 
 Clean Rivers Data
-```{r}
-# View rivers by grouped area
-raw_rivers %>% count(MAJ_NAME)
-```
-The following areas have no known sightings of platypus, and will thus be filtered from data to lessen computational load:
+
+The following areas lie significantly outside of platypus habitats, and will thus be filtered from data to lessen computational load:
 
 - Australia, North Coast
 - Australia, West Coast
 - New Zealand
 - South Pacific Islands
 
-Australia, interior slightly overlaps with some recorded sightings of platypus, so should be included in the dataset
+Australia, interior slightly overlaps with some recorded sightings of platypus, so should be included in the dataset. Removing rivers will not effect the model
 
 ```{r}
 ausRegionKeep <- c(
@@ -148,7 +148,7 @@ ausRegionKeep <- c(
 
 limited_raw_rivers <- filter(raw_rivers, MAJ_NAME == ausRegionKeep)
 
-limited_raw_rivers %>% count(MAJ_NAME)
+# limited_raw_rivers %>% count(MAJ_NAME)
 ```
 
 Environmental data
@@ -156,9 +156,48 @@ Environmental data
 # Trim down the environmental layer to frame data better, include Australia only
 env <- crop(env, extent(110, 155, -45, -8))
 
-# Plot annual mean temperature environmental data
-plot(env[[1]])
-  # This ensures the data is loaded correctly. [Will likely remove in final submission]
+bioclimVariables <-data.frame(
+  BIO = c(
+    "BIO1", 
+    "BIO2", 
+    "BIO3", 
+    "BIO4", 
+    "BIO5", 
+    "BIO6", 
+    "BIO7", 
+    "BIO8", 
+    "BIO9", 
+    "BIO10", 
+    "BIO11", 
+    "BIO12", 
+    "BIO13", 
+    "BIO14", 
+    "BIO15", 
+    "BIO16", 
+    "BIO17", 
+    "BIO18", 
+    "BIO19"),
+  Name = c(
+    "Annual Mean Temperature (C*100)", 
+    "Mean Diurnal Range (Mean of monthly (max temp - min temp)) (C*100)", 
+    "Isothermality (BIO2/BIO7) (×100)", 
+    "Temperature Seasonality (standard deviation ×100)", 
+    "Max Temperature of Warmest Month (C*100)", 
+    "Min Temperature of Coldest Month (C*100)", 
+    "Temperature Annual Range (BIO5-BIO6) (C*100)", 
+    "Mean Temperature of Wettest Quarter (C*100)", 
+    "Mean Temperature of Driest Quarter (C*100)", 
+    "Mean Temperature of Warmest Quarter (C*100)", 
+    "Mean Temperature of Coldest Quarter (C*100)", 
+    "Annual Precipitation (mm)", 
+    "Precipitation of Wettest Month (mm)", 
+    "Precipitation of Driest Month (mm)", 
+    "Precipitation Seasonality (Coefficient of Variation) (mm)", 
+    "Precipitation of Wettest Quarter (mm)", 
+    "Precipitation of Driest Quarter (mm)", 
+    "Precipitation of Warmest Quarter (mm)", 
+    "Precipitation of Coldest Quarter (mm)")
+)
 ```
 
 
@@ -168,6 +207,29 @@ plot(env[[1]])
 [Remember that this really just summarises that your data are OK after
 you've cleaned them] [Most of the real sanity checks and data cleaning
 go on in the data_cleaning.Rmd file]
+
+```{r}
+# Check Environment Data
+for (x in 1:19) {
+  plot(env[[x]], main = bioclimVariables$Name[x])
+}
+
+  # Framing is good
+  # Environmental factors look good
+```
+
+
+
+```{r}
+# Check Platypus geospatial points
+
+```
+
+
+```{r}
+# Look at rivers Data
+```
+
 
 # Addressing the questions/aims
 
