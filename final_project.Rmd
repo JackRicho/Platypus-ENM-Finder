@@ -157,6 +157,8 @@ ausRegionKeep <- c(
 
 rivers <- filter(raw_rivers, MAJ_NAME == ausRegionKeep)
 
+# Create blank dataframe to add data to
+SortedRivers <- data.frame(matrix(ncol=5,nrow=0, dimnames=list(NULL, c("ARCID", "decimalLongitude", "decimalLatitude", "MAJ_NAME", "SUB_NAME"))))
 
 # Extracting the point data
   # Note. This will take several minutes to complete. To see progress, uncomment bellow code before running
@@ -386,10 +388,6 @@ cat("Locations suitability value: ", suitability_value)
 
 # Using Haversine equation to find the nearest river:
 
-# Your current latitude and longitude
-current_latitude <- 42.360162
-current_longitude <- -71.057243
-
 # Function to calculate Haversine distance
 nearestRiver <- function(lat1, lon1, lat2, lon2) {
   # Radius of the Earth in km
@@ -423,10 +421,11 @@ nearest_point_index <- which.min(distances)
 nearest_point <- SortedRivers[nearest_point_index, ]
 
 # Print the nearest point and distance
-cat("Nearest Point:\n")
-cat("Latitude:", nearest_point$decimalLatitude, "\n")
-cat("Longitude:", nearest_point$decimalLongitude, "\n")
-cat("Distance (in km):", distances[nearest_point_index], "\n")
+cat("Nearest Point:\n",
+    "Latitude:", nearest_point$decimalLatitude, "\n",
+    "Longitude:", nearest_point$decimalLongitude, "\n",
+    "Distance (in km):", distances[nearest_point_index], "\n",
+    "River Name:", nearest_point$SUB_NAME)
 ```
 
 
