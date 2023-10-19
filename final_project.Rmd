@@ -168,28 +168,28 @@ geometry_column <- rivers$geometry
 
 # Extracting the point data
   # Note. This will take up to 10 minutes to complete. To see progress, uncomment bellow code before running
-for (x in 1:nrow(rivers)) {
+# for (x in 1:nrow(rivers)) {
+# 
+#   # Unnest coordinates from list
+#   coordinates <- st_coordinates(geometry_column[x])
+# 
+#   for (y in 1:nrow(coordinates)) {
+#     tempDF <- data.frame(
+#       "ARCID" = as.integer(rivers[[x, "ARCID"]]),
+#       "decimalLongitude" = coordinates[y, "Y"],
+#       "decimalLatitude" = coordinates[y, "X"],
+#       "MAJ_NAME" = rivers[[x, "MAJ_NAME"]],
+#       "SUB_NAME" = rivers[[x, "SUB_NAME"]])
+# 
+#     # use rbind() to add row to bottom of dataframe
+#   SortedRivers <- rbind(SortedRivers, tempDF)
+# 
+#   # Uncomment below code to see progress
+#   ## cat("Progress:   ", x, " of " nrow(rivers), "      ")
+#   }
+# }
 
-  # Unnest coordinates from list
-  coordinates <- st_coordinates(geometry_column[x])
-
-  for (y in 1:nrow(coordinates)) {
-    tempDF <- data.frame(
-      "ARCID" = as.integer(rivers[[x, "ARCID"]]),
-      "decimalLongitude" = coordinates[y, "Y"],
-      "decimalLatitude" = coordinates[y, "X"],
-      "MAJ_NAME" = rivers[[x, "MAJ_NAME"]],
-      "SUB_NAME" = rivers[[x, "SUB_NAME"]])
-
-    # use rbind() to add row to bottom of dataframe
-  SortedRivers <- rbind(SortedRivers, tempDF)
-
-  # Uncomment below code to see progress
-  ## cat("Progress:   ", x, " of " nrow(rivers), "      ")
-  }
-}
-
-write.csv(SortedRivers, "processed_data/SortedRivers.csv")
+# write.csv(SortedRivers, "processed_data/SortedRivers.csv")
 
 SortedRivers <- read.csv("processed_data/SortedRivers.csv")
 
@@ -260,10 +260,13 @@ go on in the data_cleaning.Rmd file]
 
 ```{r}
 # Check Environment Data
-for (x in 1:19) {
-  plot(env[[x]], main = bioclimVariables$Name[x])
-}
 
+# To see all plots, uncomment below code
+# for (x in 1:19) {
+#   plot(env[[x]], main = bioclimVariables$Name[x])
+# }
+
+plot(env[[1]], main = bioclimVariables$Name[1])
   # Framing is good
   # Environmental factors look good
 ```
@@ -322,34 +325,9 @@ platypusENM <- check.species(platypusENM)
   # Populates object with required missing data
 ```
 
-## Maximum Entropy Models
-
-```{r}
-# enmTools package has functions that can create maximum entropy models
-platypus.mx <- enmtools.maxent(platypusENM, env)
-
-# Show 
-platypus.mx$response.plots
-
-```
-
-Understanding Maximum Entropy Plots:
-
-Green is distribution of Environmental variable across background, These
-are the presence of environments that fit this condition across
-Australia
-
-Red is distribution of presence points (frequency of which species
-appears across those variables)
-
-Suitability Function our model has estimated (Marginal suitability)
-
-```{r}
-# See Maximum Entropy Data evaluation
-platypus.mx$training.evaluation
-```
-
 ## BioClim Model
+
+Interactive Map of BioClim Model
 
 ```{r}
 # Use enmTools to create a bioclim model
@@ -359,6 +337,60 @@ platypus.bc <- enmtools.bc(platypusENM, env, test.prop = 0.3)
 
 # Create an interactive plot to view the model
 interactive.plot.enmtools.model(platypus.bc)
+```
+
+
+```{r}
+# Show BioClim Response Plots
+
+# To see all response plots, uncomment below code
+# platypus.bc$response.plots
+  # Plots are complex objects that cannot be easily altered by changing plot title
+```
+
+Understanding Bioclim Plots:
+
+The x axis represents the particular condition/variable, for example, Annual Mean Temperature.
+
+Each plot tests the climatic variable in relation to the occurrence of platypus.
+When the red axis is high (close to 1), it represents a high presence of platypus occurring in said condition.
+
+When the green plot is closer to 1, it represents areas of Australia's environment which fits the variable condition, but does not have a high presence of platypus. If the green plot is close to or at 0, it mean that Australia has no environments that fit this condition.
+
+The blue plot is our models prediction of finding platypus in this environment, when all other climatic conditions are held at their mean.
+
+
+### Annual Mean Temperature (C*100)
+```{r}
+platypus.bc$response.plots[1]
+```
+This plot is telling us that platypus are most likely to be found in environments where the annual mean temperature is below 20$^\circ$C, with an optimal temperature around 15$^\circ$C.
+
+There are no environments in Australia that have a mean temperature lower than 10$^\circ$C
+
+
+### Max Temperature of Warmest Month (C*100)
+```{r}
+platypus.bc$response.plots[5]
+```
+In the warmest month, platypus are not found in any environments where the temperature excedes 33$^\circ$C. They are found in all environments where the temperature is lower than 35$^\circ$C
+
+
+### Mean Temperature of Wettest Quarter (C*100)
+```{r}
+platypus.bc$response.plots[8]
+```
+This plot shows what appears to be two different groups of environments. One where platypus exist and the wettest quarter of the year's average temperature is just less than 10$^\circ$C (note than no colder environments exist in Australia), and one where the wettest quaters mean temperatures is around 22$^\circ$C.
+
+There are two important things to note here: There is little area of Australian environmental conditions in between these two groups, and there is a large area of environment with no platypus, and a much higher mean temperature during the wettest month.
+
+What is going on here comes down to geography and precipiation. In the North (North QLD area) where monsoon conditions are present, the wettest quater of the year is around summer, which is also the hottest. Further south, in NSW and Vic, the wettest months of the year is around winter, which is much colder. Finally, the large platypus-absent hot area would be Australia's arid, dry interior, which has its wettest months in summer.
+
+This plot is useful in highlighting a flaw in the bioclim model. It is less robust than a model such as GLM (Generalized Linear Modelling)
+
+## Training Evaluation
+```{r}
+platypus.bc$training.evaluation
 ```
 
 ## Platypus Suitability Locator
