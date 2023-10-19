@@ -99,7 +99,7 @@ ogrListLayers("raw_data/rivers_australia_37252")
 # Read Rivers Data
 raw_rivers <- sf::st_read(dsn = "raw_data/rivers_australia_37252", layer = "rivers_australia_37252")
 ```
-
+## Environmental Variables and BioClim Raster Data
 Environment Data:
 Environment data available through raster package
 ```{r}
@@ -113,6 +113,7 @@ env <- raster::getData(name = "worldclim", res = 10, var = "bio")
 [R chunks and prose which:] [Tidies up your raw data, outputs
 tidied_data.csv] [Cleans up your tidied data, outputs cleaned_data.csv]
 
+## Cleaning Platypus Data
 Clean platypus Data
 ```{r}
 # Remove duplicates
@@ -134,6 +135,7 @@ cleaning_platypus <- filter(cleaning_platypus, coordinateUncertaintyInMeters <= 
 platypus <- cleaning_platypus
 ```
 
+## Cleaning River Data
 Clean Rivers Data
 
 The following areas lie significantly outside of platypus habitats, and will thus be filtered from data to lessen computational load:
@@ -184,6 +186,7 @@ ggplot(SortedRivers, aes(x = decimalLatitude, y = decimalLongitude, colour = MAJ
 
 ```
 
+## Cleaning Environmental Variable Data
 Environmental data
 ```{r}
 # Trim down the environmental layer to frame data better, include Australia only
@@ -241,6 +244,8 @@ bioclimVariables <-data.frame(
 you've cleaned them] [Most of the real sanity checks and data cleaning
 go on in the data_cleaning.Rmd file]
 
+## Environment Sanity Checks
+
 ```{r}
 # Check Environment Data
 for (x in 1:19) {
@@ -251,7 +256,7 @@ for (x in 1:19) {
   # Environmental factors look good
 ```
 
-
+## Platypus Sanity Checks
 
 ```{r}
 library(rnaturalearth)
@@ -266,7 +271,7 @@ map_with_points <- map +
 
 print(map_with_points)
 ```
-
+## River Coordinate Point Extraction & Sanity Checks
 
 ```{r}
 # Look at rivers Data
@@ -300,7 +305,7 @@ print(rivers_map_with_points)
 
 # Addressing the questions/aims
 
-Creating a bioclim model
+## Creating a bioclim model
 ```{r}
 # Create DF with only required data
 platypusPresenceDF <- platypus %>% 
@@ -322,7 +327,7 @@ platypusENM <- check.species(platypusENM)
   # Populates object with required missing data
 ```
 
-Maximum Entropy Models
+## Maximum Entropy Models
 
 ```{r}
 # enmTools package has functions that can create maximum entropy models
@@ -349,7 +354,7 @@ Suitability Function our model has estimated (Marginal suitability)
 platypus.mx$training.evaluation
 ```
 
-BioClim Model
+## BioClim Model
 
 ```{r}
 # Use enmTools to create a bioclim model
@@ -361,6 +366,7 @@ platypus.bc <- enmtools.bc(platypusENM, env, test.prop = 0.3)
 interactive.plot.enmtools.model(platypus.bc)
 ```
 
+## Platypus Suitability Locator
 Getting input to find platypus suitability
 
 ```{r}
