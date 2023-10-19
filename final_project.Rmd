@@ -197,6 +197,7 @@ ggplot(SortedRivers, aes(x = decimalLongitude, y = decimalLatitude, colour = MAJ
   geom_point()
 
 ```
+We can clearly see a large area of Australia, especially platypus inhabited East coast, is populated with rivers within our dataset. Whilst it may not contain every stream and waterway, it will do for the project
 
 ## Cleaning Environmental Variable Data
 Environmental data
@@ -250,12 +251,6 @@ bioclimVariables <-data.frame(
 
 
 # Sanity checks
-
-[R chunks and prose which perform sanity checks on your cleaned data]
-[Remember that this really just summarises that your data are OK after
-you've cleaned them] [Most of the real sanity checks and data cleaning
-go on in the data_cleaning.Rmd file]
-
 ## Environment Sanity Checks
 
 ```{r}
@@ -388,6 +383,10 @@ What is going on here comes down to geography and precipiation. In the North (No
 
 This plot is useful in highlighting a flaw in the bioclim model. It is less robust than a model such as GLM (Generalized Linear Modelling), which may be able to account for the differing groups Regardless, for the scope of this project, bioclim is the more appropriate due to its less complex and computationally challenging nature.
 
+### Other Observations
+
+Platypus can withstand a decently wide range of climates, being found in Australia’s coldest environments (BIO1), but also in the warmer of regions of Queensland, all the way up to Cape York (Barungguan). Being aquatic, they are found commonly in climates with decent rainfall around all months. Platypus are found more commonly in climates with less fluctuation in monthly temperatures (BIO3) and less temperature seasonality (BIO4).
+
 
 ## Training Evaluation
 ```{r}
@@ -398,15 +397,28 @@ platypus.bc$training.evaluation
 Getting input to find platypus suitability
 
 ```{r}
-# Current Location platypus suitability
+# Current Location to assess platypus suitability
+# Inputs require decimalLatLong
 inputLatitude <- -35.272240
 inputLongitude <- 149.121528
+  # Current coordinates set to ANU
+
+
+
+inputLatitude <- -32.225941
+inputLongitude <- 152.242181
+
 
 suitability_value <- extract(platypus.bc$suitability, cbind(inputLongitude, inputLatitude))
 suitability_value <- as.numeric(suitability_value)
 
 cat("Locations suitability value: ", suitability_value)
 ```
+
+Of course, this is modeled likelihood of a complex living organism, in an overwhelmingly complex living ecosystem. The model does not take into account human interference, such as daming, pollution, hunting, urbanisation and environmental destruction, all of which have been known to negatively impact platypus presence.
+
+The best way to utelise the suitability function is through relative comparison. Try out a few locations, and have a look what the function determines is more suitable out of the options.
+
 
 ## Local River Finder
 ```{r}
@@ -434,7 +446,11 @@ nearestRiver <- function(lat1, lon1, lat2, lon2) {
   
   return(distance)
 }
+```
 
+
+
+```{r}
 # Calculate distances and find the nearest point
 distances <- sapply(1:nrow(SortedRivers), function(i) {
   nearestRiver(inputLatitude, inputLongitude, SortedRivers$decimalLatitude[i], SortedRivers$decimalLongitude[i])
@@ -453,6 +469,8 @@ cat("Nearest Point:\n",
     "Distance (in km):", distances[nearest_point_index], "\n",
     "River Name:", nearest_point$SUB_NAME)
 ```
+
+## Where else could we go?
 
 
 # References
