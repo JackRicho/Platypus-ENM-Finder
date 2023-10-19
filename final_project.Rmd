@@ -375,13 +375,58 @@ inputLatitude <- -35.272240
 inputLongitude <- 149.121528
 
 suitability_value <- extract(platypus.bc$suitability, cbind(inputLongitude, inputLatitude))
-print(suitability_value)
+suitability_value <- as.numeric(suitability_value)
+
+cat("Locations suitability value: ", suitability_value)
 ```
 
-
+## Local River Finder
 ```{r}
 # Current Location nearest river
 
+# Using Haversine equation to find the nearest river:
+
+# Your current latitude and longitude
+current_latitude <- 42.360162
+current_longitude <- -71.057243
+
+# Function to calculate Haversine distance
+nearestRiver <- function(lat1, lon1, lat2, lon2) {
+  # Radius of the Earth in km
+  earthRadius <- 6371
+  
+  # Convert degrees to radians
+  lat1 <- lat1 * pi / 180
+  lon1 <- lon1 * pi / 180
+  lat2 <- lat2 * pi / 180
+  lon2 <- lon2 * pi / 180
+  
+  # Haversine formula
+  dlat <- lat2 - lat1
+  dlon <- lon2 - lon1
+  a <- sin(dlat/2)^2 + cos(lat1) * cos(lat2) * sin(dlon/2)^2
+  c <- 2 * atan2(sqrt(a), sqrt(1-a))
+  distance <- earthRadius * c
+  
+  return(distance)
+}
+
+# Calculate distances and find the nearest point
+distances <- sapply(1:nrow(SortedRivers), function(i) {
+  nearestRiver(inputLatitude, inputLongitude, SortedRivers$decimalLatitude[i], SortedRivers$decimalLongitude[i])
+})
+
+# Find the index of the minimum distance
+nearest_point_index <- which.min(distances)
+
+# Get the nearest point
+nearest_point <- SortedRivers[nearest_point_index, ]
+
+# Print the nearest point and distance
+cat("Nearest Point:\n")
+cat("Latitude:", nearest_point$decimalLatitude, "\n")
+cat("Longitude:", nearest_point$decimalLongitude, "\n")
+cat("Distance (in km):", distances[nearest_point_index], "\n")
 ```
 
 
