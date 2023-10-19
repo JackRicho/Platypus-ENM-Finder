@@ -114,6 +114,8 @@ tidied_data.csv] [Cleans up your tidied data, outputs cleaned_data.csv]
 Clean platypus Data
 ```{r}
 # Remove duplicates
+  # We will assume that if the date, location and recorder is the same, then the result is a duplicate
+  # The Location change should prevent filtering out multiple sightings in one day
 cleaning_platypus <- raw_platypus %>%
   distinct(eventDate, decimalLatitude, decimalLongitude, recordedBy, .keep_all = TRUE)
   # From 20077
@@ -125,6 +127,9 @@ cleaning_platypus <- filter(cleaning_platypus, occurrenceStatus == "PRESENT")
 
 # Remove Location Uncertianty over 10,000m
 cleaning_platypus <- filter(cleaning_platypus, coordinateUncertaintyInMeters <= 10000)
+
+#Finalise cleaning
+platypus <- cleaning_platypus
 ```
 
 Clean Rivers Data
@@ -146,7 +151,7 @@ ausRegionKeep <- c(
   "Murray - Darling", 
   "Tasmania")
 
-limited_raw_rivers <- filter(raw_rivers, MAJ_NAME == ausRegionKeep)
+rivers <- filter(raw_rivers, MAJ_NAME == ausRegionKeep)
 
 # limited_raw_rivers %>% count(MAJ_NAME)
 ```
@@ -221,43 +226,68 @@ for (x in 1:19) {
 
 
 ```{r}
-# Check Platypus geospatial points
+library(rnaturalearth)
+australia <- ne_countries(country = "Australia", returnclass = "sf")
 
+map <- ggplot() +
+  geom_sf(data = australia) +
+  theme_void()
+
+map_with_points <- map +
+  geom_point(data = platypus, aes(x = decimalLongitude, y = decimalLatitude), size = 0.1)
+
+print(map_with_points)
 ```
 
 
 ```{r}
 # Look at rivers Data
+# Isolate column with each rivers lat/long points in list
+geometry_column <- rivers$geometry
+
+# Extract Latitudes and Longitudes into new objects
+coordinates <- st_coordinates(geometry_column)
+latitudes <- coordinates[, "Y"]
+longitudes <- coordinates[, "X"]
+
+# Convert from list to dataframe
+latitudesDF <- as.data.frame(latitudes)
+longitudesDF <- as.data.frame(longitudes)
+
+# Merge into one dataframe
+riversLatLong <- latitudesDF
+riversLatLong <- riversLatLong %>% 
+  mutate(longitudes = longitudesDF$longitudes)
+
+# Plot points to ensure large amount of rivers in australia contained within dataset
+# And overlay platypus sightings to ensure most areas are located close to findable river
+ggplot(riversLatLong, aes(x = longitudes, y = latitudes)) + 
+  geom_point(size = 0.1) +
+  geom_point(data = platypus, aes(x = decimalLongitude, y = decimalLatitude), size = 0.1, colour = 'red')
 ```
 
 
 # Addressing the questions/aims
 
+Creating a bioclim model
 ```{r}
-# Loading Data
-raw_platypus <- read.csv("raw_data/Platypus5-10-23.csv")
-
-
 # Create DF with only required data
-platypusPresenceDF <- raw_platypus %>% 
-  select(decimalLongitude, decimalLatitude)
-  # I have attempted to create this in the SpatRaster format, however it encounters issues down the line
+platypusPresenceDF <- platypus %>% 
+  dplyr::select(decimalLongitude, decimalLatitude)
+  # I have attempted to create this in the SpatRaster format, however it encounters issues down the line. Will work fine
 
 
-```
-
-```{r}
 # We package each lineage up in an ENMtools species object
 
 # Creates empty object with slots for various values
-platypus <- enmtools.species()
+platypusENM <- enmtools.species()
 
 #Inhabit columns with required data
-platypus$species.name <- "Ornithorhynchus anatinus"
-platypus$presence.points <- platypusPresenceDF
+platypusENM$species.name <- "Ornithorhynchus anatinus"
+platypusENM$presence.points <- platypusPresenceDF
 
 # Check format of the enmtools.species
-platypus <- check.species(platypus)
+platypusENM <- check.species(platypusENM)
   # Populates object with required missing data
 ```
 
@@ -265,7 +295,7 @@ Maximum Entropy Models
 
 ```{r}
 # enmTools package has functions that can create maximum entropy models
-platypus.mx <- enmtools.maxent(platypus, env)
+platypus.mx <- enmtools.maxent(platypusENM, env)
 
 # Show 
 platypus.mx$response.plots
@@ -291,7 +321,7 @@ BioClim Model
 
 ```{r}
 # Use enmTools to create a bioclim model
-platypus.bc <- enmtools.bc(platypus, env, test.prop = 0.3)
+platypus.bc <- enmtools.bc(platypusENM, env, test.prop = 0.3)
   # Bioclim uses the presence of observed insances and analyses them in relation to our 19 climatic variables to create a suitability plot
   # test.prop sets aside 30% of our data, allowing us to assess the accuracy of the model
 
