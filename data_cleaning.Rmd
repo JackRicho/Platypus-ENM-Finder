@@ -1,0 +1,121 @@
+---
+title: "Environmental Niche Modelling in R - Data Cleaning"
+author: "Jack Richardson u7291420"
+date: "4/10/23"
+output:  
+    html_document:
+        toc: true
+        toc_depth: 4
+        theme: cosmo
+        number_sections: false
+        toc_float: true
+        highlight: pygments
+        fig_width: 8
+        fig_height: 4
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+# Platypus Data
+
+```{r}
+# Read Platypus Data
+raw_platypus <- read.csv("raw_data/Platypus18-10-23.csv")
+```
+
+# Rivers Data
+
+```{r}
+# Find Rivers Layer
+ogrListLayers("raw_data/rivers_australia_37252")
+
+# Read Rivers Data
+raw_rivers <- sf::st_read(dsn = "raw_data/rivers_australia_37252", layer = "rivers_australia_37252")
+```
+
+# 
+
+## Cleaning Platypus Data
+Clean platypus Data
+```{r}
+# Remove duplicates
+  # We will assume that if the date, location and recorder is the same, then the result is a duplicate
+  # The Location change should prevent filtering out multiple sightings in one day
+cleaning_platypus <- raw_platypus %>%
+  distinct(eventDate, decimalLatitude, decimalLongitude, recordedBy, .keep_all = TRUE)
+  # From 20077
+  # To 18662
+  # Removed 1415 results
+
+# Remove absence
+cleaning_platypus <- filter(cleaning_platypus, occurrenceStatus == "PRESENT")
+
+# Remove Location Uncertianty over 10,000m
+cleaning_platypus <- filter(cleaning_platypus, coordinateUncertaintyInMeters <= 10000)
+
+#Finalise cleaning
+
+write.csv(cleaning_platypus, "processed_data/platypus.csv")
+platypus <- cleaning_platypus
+```
+
+## Cleaning River Data
+Clean Rivers Data
+
+The following areas lie significantly outside of platypus habitats, and will thus be filtered from data to lessen computational load:
+
+- Australia, North Coast
+- Australia, West Coast
+- New Zealand
+- South Pacific Islands
+
+Australia, interior slightly overlaps with some recorded sightings of platypus, so should be included in the dataset. Removing rivers will not effect the model
+
+```{r}
+ausRegionKeep <- c(
+  "Australia, East Coast", 
+  "Australia, South Coast",
+  "Australia, Interior", 
+  "Murray - Darling", 
+  "Tasmania")
+
+rivers <- filter(raw_rivers, MAJ_NAME == ausRegionKeep)
+
+# Create blank dataframe to add data to
+SortedRivers <- data.frame(matrix(ncol = 5, nrow = 0, dimnames = list(NULL, c("ARCID", "decimalLongitude", "decimalLatitude", "MAJ_NAME", "SUB_NAME"))))
+
+
+# Isolate the river geometry (list form of each point of river)
+geometry_column <- rivers$geometry
+
+# Extracting the point data
+# Note. This will take up to 10 minutes to complete.
+for (x in 1:nrow(rivers)) {
+
+  # Unnest coordinates from list
+  coordinates <- st_coordinates(geometry_column[x])
+
+  for (y in 1:nrow(coordinates)) {
+    tempDF <- data.frame(
+      "ARCID" = as.integer(rivers[[x, "ARCID"]]),
+      "decimalLongitude" = coordinates[y, "Y"],
+      "decimalLatitude" = coordinates[y, "X"],
+      "MAJ_NAME" = rivers[[x, "MAJ_NAME"]],
+      "SUB_NAME" = rivers[[x, "SUB_NAME"]])
+
+    # use rbind() to add row to bottom of dataframe
+  SortedRivers <- rbind(SortedRivers, tempDF)
+
+  # Uncomment below code to see progress
+  ## cat("Progress:   ", x, " of " nrow(rivers), "      ")
+  }
+}
+
+write.csv(SortedRivers, "processed_data/SortedRivers.csv")
+
+ggplot(SortedRivers, aes(x = decimalLongitude, y = decimalLatitude, colour = MAJ_NAME)) +
+  geom_point()
+```
+
+We can clearly see a large area of Australia, especially platypus inhabited East coast, is populated with rivers within our dataset. Whilst it may not contain every stream and waterway, it will do for the project

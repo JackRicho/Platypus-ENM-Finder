@@ -61,14 +61,13 @@ library(ENMTools)
 library(tidyverse)
 library(leaflet)
 library(terra)
+library(rnaturalearth)
+
+print("Libraries Loaded")
 ```
 
 
 # Raw data
-
-[Explains how and where to get the exact raw data you got] [Is
-reproducible by a person (required) and a machine (ideally)]
-
 ## Platypus Observation Data
 Platypus Data: Available through Atlas of Living Australia. Search:
 *Ornithorhynchus anatinus*
@@ -79,11 +78,6 @@ available here:
 acquired 18-10-2023 with no data exclusions.
 Renamed (Speciescommonname)DD-MM-YY i.e. Platypus18-10-23
 
-```{r}
-# Read Platypus Data
-raw_platypus <- read.csv("raw_data/Platypus18-10-23.csv")
-```
-
 ## Rivers of Australia & NZ Data
 Rivers Data: Available through Food and Agriculture Organization of the
 United Nations: /AQUASTAT/Rivers of Australia and New Zealand
@@ -92,13 +86,7 @@ In ERSI data format (geospatial data)
 available here:
 <https://data.apps.fao.org/catalog/iso/6a53d768-1e20-46ea-92a8-c4040286057d>
 
-```{r}
-# Find Rivers Layer
-ogrListLayers("raw_data/rivers_australia_37252")
 
-# Read Rivers Data
-raw_rivers <- sf::st_read(dsn = "raw_data/rivers_australia_37252", layer = "rivers_australia_37252")
-```
 ## Environmental Variables and BioClim Raster Data
 Environment Data:
 Environment data available through raster package
@@ -113,93 +101,11 @@ env <- raster::getData(name = "worldclim", res = 10, var = "bio")
 [R chunks and prose which:] [Tidies up your raw data, outputs
 tidied_data.csv] [Cleans up your tidied data, outputs cleaned_data.csv]
 
-## Cleaning Platypus Data
-Clean platypus Data
-```{r}
-# Remove duplicates
-  # We will assume that if the date, location and recorder is the same, then the result is a duplicate
-  # The Location change should prevent filtering out multiple sightings in one day
-cleaning_platypus <- raw_platypus %>%
-  distinct(eventDate, decimalLatitude, decimalLongitude, recordedBy, .keep_all = TRUE)
-  # From 20077
-  # To 18662
-  # Removed 1415 results
-
-# Remove absence
-cleaning_platypus <- filter(cleaning_platypus, occurrenceStatus == "PRESENT")
-
-# Remove Location Uncertianty over 10,000m
-cleaning_platypus <- filter(cleaning_platypus, coordinateUncertaintyInMeters <= 10000)
-
-#Finalise cleaning
-platypus <- cleaning_platypus
-```
-
-## Cleaning River Data
-Clean Rivers Data
-
-The following areas lie significantly outside of platypus habitats, and will thus be filtered from data to lessen computational load:
-
-- Australia, North Coast
-- Australia, West Coast
-- New Zealand
-- South Pacific Islands
-
-Australia, interior slightly overlaps with some recorded sightings of platypus, so should be included in the dataset. Removing rivers will not effect the model
-
-```{r}
-ausRegionKeep <- c(
-  "Australia, East Coast", 
-  "Australia, South Coast",
-  "Australia, Interior", 
-  "Murray - Darling", 
-  "Tasmania")
-
-rivers <- filter(raw_rivers, MAJ_NAME == ausRegionKeep)
-
-# Create blank dataframe to add data to
-SortedRivers <- data.frame(matrix(ncol = 5, nrow = 0, dimnames = list(NULL, c("ARCID", "decimalLongitude", "decimalLatitude", "MAJ_NAME", "SUB_NAME"))))
+## Rivers Data
 
 
-###
 
-# Isolate the river geometry (list form of each point of river)
-geometry_column <- rivers$geometry
-
-# Extracting the point data
-  # Note. This will take up to 10 minutes to complete. To see progress, uncomment bellow code before running
-# for (x in 1:nrow(rivers)) {
-# 
-#   # Unnest coordinates from list
-#   coordinates <- st_coordinates(geometry_column[x])
-# 
-#   for (y in 1:nrow(coordinates)) {
-#     tempDF <- data.frame(
-#       "ARCID" = as.integer(rivers[[x, "ARCID"]]),
-#       "decimalLongitude" = coordinates[y, "Y"],
-#       "decimalLatitude" = coordinates[y, "X"],
-#       "MAJ_NAME" = rivers[[x, "MAJ_NAME"]],
-#       "SUB_NAME" = rivers[[x, "SUB_NAME"]])
-# 
-#     # use rbind() to add row to bottom of dataframe
-#   SortedRivers <- rbind(SortedRivers, tempDF)
-# 
-#   # Uncomment below code to see progress
-#   ## cat("Progress:   ", x, " of " nrow(rivers), "      ")
-#   }
-# }
-
-# write.csv(SortedRivers, "processed_data/SortedRivers.csv")
-
-SortedRivers <- read.csv("processed_data/SortedRivers.csv")
-
-ggplot(SortedRivers, aes(x = decimalLongitude, y = decimalLatitude, colour = MAJ_NAME)) +
-  geom_point()
-
-```
-We can clearly see a large area of Australia, especially platypus inhabited East coast, is populated with rivers within our dataset. Whilst it may not contain every stream and waterway, it will do for the project
-
-## Cleaning Environmental Variable Data
+## Wrangling Environmental Variable Data
 Environmental data
 ```{r}
 # Trim down the environmental layer to frame data better, include Australia only
@@ -207,25 +113,9 @@ env <- crop(env, extent(110, 155, -45, -8))
 
 bioclimVariables <-data.frame(
   BIO = c(
-    "BIO1", 
-    "BIO2", 
-    "BIO3", 
-    "BIO4", 
-    "BIO5", 
-    "BIO6", 
-    "BIO7", 
-    "BIO8", 
-    "BIO9", 
-    "BIO10", 
-    "BIO11", 
-    "BIO12", 
-    "BIO13", 
-    "BIO14", 
-    "BIO15", 
-    "BIO16", 
-    "BIO17", 
-    "BIO18", 
-    "BIO19"),
+    "BIO1", "BIO2", "BIO3", "BIO4", "BIO5", "BIO6", "BIO7", "BIO8", "BIO9", 
+    "BIO10", "BIO11", "BIO12", "BIO13", "BIO14", "BIO15", "BIO16", "BIO17", 
+    "BIO18", "BIO19"),
   Name = c(
     "Annual Mean Temperature (C*100)", 
     "Mean Diurnal Range (Mean of monthly (max temp - min temp)) (C*100)", 
@@ -247,6 +137,8 @@ bioclimVariables <-data.frame(
     "Precipitation of Warmest Quarter (mm)", 
     "Precipitation of Coldest Quarter (mm)")
 )
+
+print(bioclimVariables)
 ```
 
 
@@ -269,18 +161,19 @@ plot(env[[1]], main = bioclimVariables$Name[1])
 ## Platypus Sanity Checks
 
 ```{r}
-library(rnaturalearth)
 australia <- ne_countries(country = "Australia", returnclass = "sf")
 
 map <- ggplot() +
-  geom_sf(data = australia) +
+  geom_sf(data = australia, fill = "lightblue") +
   theme_void()
 
 map_with_points <- map +
-  geom_point(data = platypus, aes(x = decimalLongitude, y = decimalLatitude), size = 0.1)
+  geom_point(data = platypus, aes(x = decimalLongitude, y = decimalLatitude), size = 0.1) +
+  ggtitle("Platypus Observations from ALA")
 
 print(map_with_points)
 ```
+
 ## River Coordinate Point Extraction & Sanity Checks
 
 ```{r}
@@ -368,6 +261,7 @@ There are no environments in Australia that have a mean temperature lower than 1
 ```{r}
 platypus.bc$response.plots[5]
 ```
+
 In the warmest month, platypus are not found in any environments where the temperature excedes 33$^\circ$C. They are found in all environments where the temperature is lower than 35$^\circ$C
 
 
@@ -402,12 +296,6 @@ Getting input to find platypus suitability
 inputLatitude <- -35.272240
 inputLongitude <- 149.121528
   # Current coordinates set to ANU
-
-
-
-inputLatitude <- -32.225941
-inputLongitude <- 152.242181
-
 
 suitability_value <- extract(platypus.bc$suitability, cbind(inputLongitude, inputLatitude))
 suitability_value <- as.numeric(suitability_value)
@@ -463,10 +351,10 @@ nearest_point_index <- which.min(distances)
 nearest_point <- SortedRivers[nearest_point_index, ]
 
 # Print the nearest point and distance
-cat("Nearest Point:\n",
+cat("Nearest River:\n",
     "Latitude:", nearest_point$decimalLatitude, "\n",
     "Longitude:", nearest_point$decimalLongitude, "\n",
-    "Distance (in km):", distances[nearest_point_index], "\n",
+    "Distance (in km) to River:", distances[nearest_point_index], "\n",
     "River Name:", nearest_point$SUB_NAME)
 ```
 
