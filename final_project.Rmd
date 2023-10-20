@@ -241,34 +241,7 @@ platypusENM <- check.species(platypusENM)
 
 ## BioClim Model
 
-Interactive Map of BioClim Model
-
-```{r}
-# Use enmTools to create a bioclim model
-platypus.bc <- enmtools.bc(platypusENM, env, test.prop = 0.3)
-  # Bioclim uses the presence of observed insances and analyses them in relation to our 19 climatic variables to create a suitability plot
-  # test.prop sets aside 30% of our data, allowing us to assess the accuracy of the model
-
-# Create an interactive plot to view the model
-interactive.plot.enmtools.model(platypus.bc)
-```
-
-To see model, untick training points.
-
-Lighter points represent areas with a higher environmental suitability
-for platypus habitation. The areas of habitation roughly follow the
-Great Dividing Range, where platypus are more suited to the cooler,
-wetter east side of the mountian range.
-
-Failings of the model: If we compare our model to the observations
-
-```{r}
-# Show BioClim Response Plots
-
-# To see all response plots, uncomment below code
-# platypus.bc$response.plots
-  # Plots are complex objects that cannot be easily altered by changing plot title
-```
+### Response Plots
 
 Understanding Bioclim Plots:
 
@@ -351,6 +324,30 @@ all months. Platypus are found more commonly in climates with less
 fluctuation in monthly temperatures (BIO3) and less temperature
 seasonality (BIO4).
 
+
+### Interactive Map of BioClim Model
+
+```{r}
+# Use enmTools to create a bioclim model
+platypus.bc <- enmtools.bc(platypusENM, env, test.prop = 0.3)
+  # Bioclim uses the presence of observed insances and analyses them in relation to our 19 climatic variables to create a suitability plot
+  # test.prop sets aside 30% of our data, allowing us to assess the accuracy of the model
+
+# Create an interactive plot to view the model
+interactive.plot.enmtools.model(platypus.bc)
+```
+
+To see model, untick training points.
+
+Lighter points represent areas with a higher environmental suitability
+for platypus habitation. The areas of habitation roughly follow the
+Great Dividing Range, where platypus are more suited to the cooler,
+wetter east side of the mountian range.
+
+Failings of the model: If we compare our model to the observations of platypus, we can see for example, that tasmania has seen many observations, but is ranked as relatively unsuitable by the model.
+
+My guess, is that this is due to a weighting inaccuracies. Platypus, being aquatic care relatively little about precipitation, as long as rivers do not dry up. 7 of the 19 bioclim variables relate to precipitation, possibly over relying on the importance of rainfall in the model. That being said, the model still satisfies the aim of building a species distribution model. 
+
 ## Training Evaluation
 
 ```{r}
@@ -388,7 +385,6 @@ determines is more suitable out of the options.
 
 ```{r}
 # Current Location nearest river
-
 # Using Haversine equation to find the nearest river:
 
 # Function to calculate Haversine distance
@@ -411,9 +407,8 @@ nearestRiver <- function(lat1, lon1, lat2, lon2) {
   
   return(distance)
 }
-```
 
-```{r}
+
 # Calculate distances and find the nearest point
 distances <- sapply(1:nrow(SortedRivers), function(i) {
   nearestRiver(inputLatitude, inputLongitude, SortedRivers$decimalLatitude[i], SortedRivers$decimalLongitude[i])
@@ -426,14 +421,14 @@ nearest_point_index <- which.min(distances)
 nearest_point <- SortedRivers[nearest_point_index, ]
 
 # Print the nearest point and distance
-cat("Nearest River:\n",
+cat("Locations suitability value: ", suitability_value, "\n",
+    "Local River:", nearest_point$SUB_NAME, "river", "\n",
     "Latitude:", nearest_point$decimalLatitude, "\n",
     "Longitude:", nearest_point$decimalLongitude, "\n",
-    "Distance (in km) to River:", distances[nearest_point_index], "\n",
-    "River Name:", nearest_point$SUB_NAME)
+    "Distance (in km) to River:", distances[nearest_point_index], "\n")
 ```
 
-## Where else could we go?
+By altering the values of decimalLatitude and decimalLongitude, users can input their locations, and find the quantitative modelled suitability of anywhere in Australia. Assisting in their search for Australias most elusive aquatic monotreme.
 
 # References
 
