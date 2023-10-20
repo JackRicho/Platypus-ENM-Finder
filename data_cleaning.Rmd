@@ -16,6 +16,18 @@ editor_options:
   markdown: 
     wrap: 72
 ---
+# Loading Libraries
+```{r}
+library(sf)
+library(rgdal)
+library(dplyr)
+library(devtools)
+library(ENMTools)
+library(tidyverse)
+library(leaflet)
+library(terra)
+library(rnaturalearth)
+```
 
 # Platypus Data
 
@@ -33,8 +45,6 @@ ogrListLayers("raw_data/rivers_australia_37252")
 # Read Rivers Data
 raw_rivers <- sf::st_read(dsn = "raw_data/rivers_australia_37252", layer = "rivers_australia_37252")
 ```
-
-# 
 
 ## Cleaning Platypus Data
 Clean platypus Data
@@ -54,10 +64,11 @@ cleaning_platypus <- filter(cleaning_platypus, occurrenceStatus == "PRESENT")
 # Remove Location Uncertianty over 10,000m
 cleaning_platypus <- filter(cleaning_platypus, coordinateUncertaintyInMeters <= 10000)
 
-#Finalise cleaning
+# Remove Location Uncertianty NA
+cleaning_platypus <- cleaning_platypus[!is.na(cleaning_platypus$coordinateUncertaintyInMeters), ]
 
+#Finalise cleaning
 write.csv(cleaning_platypus, "processed_data/platypus.csv")
-platypus <- cleaning_platypus
 ```
 
 ## Cleaning River Data
@@ -73,6 +84,7 @@ The following areas lie significantly outside of platypus habitats, and will thu
 Australia, interior slightly overlaps with some recorded sightings of platypus, so should be included in the dataset. Removing rivers will not effect the model
 
 ```{r}
+# Mark Regions to keep in data
 ausRegionKeep <- c(
   "Australia, East Coast", 
   "Australia, South Coast",
@@ -80,6 +92,7 @@ ausRegionKeep <- c(
   "Murray - Darling", 
   "Tasmania")
 
+#Filter to keep only used data
 rivers <- filter(raw_rivers, MAJ_NAME == ausRegionKeep)
 
 # Create blank dataframe to add data to
@@ -108,14 +121,23 @@ for (x in 1:nrow(rivers)) {
   SortedRivers <- rbind(SortedRivers, tempDF)
 
   # Uncomment below code to see progress
-  ## cat("Progress:   ", x, " of " nrow(rivers), "      ")
+  cat("Progress:   ", x, " of ", nrow(rivers), "\n")
   }
 }
 
+# Save csv to raw data folder
 write.csv(SortedRivers, "processed_data/SortedRivers.csv")
 
+# SortedRivers <- read.csv("processed_data/SortedRivers.csv")
+
+# Plot points by area
 ggplot(SortedRivers, aes(x = decimalLongitude, y = decimalLatitude, colour = MAJ_NAME)) +
-  geom_point()
+  geom_point() +
+  ggtitle("Australia River Points by Region") +
+  labs(color = "Region") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  xlab("Longitude") +
+  ylab("Laitude")
 ```
 
 We can clearly see a large area of Australia, especially platypus inhabited East coast, is populated with rivers within our dataset. Whilst it may not contain every stream and waterway, it will do for the project

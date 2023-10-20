@@ -29,16 +29,19 @@ of figures in your document. You can just count these]
 
 # Data Description
 
-[A brief (\~100-200 words should be more than enough) description of the
-dataset, referencing any key publications that go with it]
-
 This project uses 3 datasets:
 
-Atlas of Living Australias most current (as of 18/10/22) platypus occurrence records with no exclusions to data. Collected through a variety of research, conservation work and citizen science
+Atlas of Living Australias most current (as of 18/10/22) platypus
+occurrence records with no exclusions to data. Collected through a
+variety of research, conservation work and citizen science
 
-Bioclimatic environment data that represents annual trends in climate, rainfall and seasonalty. Standard set of variables used in Species Distribution Modeling
+Bioclimatic environment data that represents annual trends in climate,
+rainfall and seasonalty. Standard set of variables used in Species
+Distribution Modeling
 
-Rivers Dataset containing geospatial point locations of Australia and New Zealand Rivers derived from World Wildlife Fund's (WWF) HydroSHEDS drainage direction layer and a stream network layer.
+Rivers Dataset containing geospatial point locations of Australia and
+New Zealand Rivers derived from World Wildlife Fund's (WWF) HydroSHEDS
+drainage direction layer and a stream network layer.
 
 # Questions/Aims
 
@@ -50,8 +53,19 @@ This project has 2 aims:
 -   To create a tool whereby users can input a location and they are
     told the suitability of that place to platypus habitation, and are
     told the nearest river where they may be able to find platypus
+    
+## What is ENM? and why BioClim?
+ENM (Environmental Niche Modeling), commonly referred to as Species Distribution Modelling (SDM) is the use of computational models to calculate habitat suitability for a particular species, and thus where they may be found. 
+
+There are a variety of approaches a model can take I have selected to use BioClim, which inputs geographic observation data of platypus, then finds key relations of presence and absence with a number of climatic variables. The model then gives each square on a grid map of Australia a score, whereby which higher values indicate more suitable conditions, and lower values represent less suitable conditions.
+
+BioClim is not the only approach to SDM. More complex methods, such as Generalized Linear Modelling, and less complex methods, such as Domain, are available. Additionally, alternative approaches exist, like Random Forests, which is based on decision trees rather than observation data, making it, in theory, possible to model species of which limited observations exist, such as introduced species. 
+
+For this project, BioClim is the most appropriate option, as it is designed not to predict places of new sightings, but to calculate the relative suitability of habitats, assisting in identifying areas of likely observation.
+
 
 # Loading Libraries
+
 ```{r}
 library(sf)
 library(rgdal)
@@ -66,47 +80,55 @@ library(rnaturalearth)
 print("Libraries Loaded")
 ```
 
-
 # Raw data
+
 ## Platypus Observation Data
+
 Platypus Data: Available through Atlas of Living Australia. Search:
 *Ornithorhynchus anatinus*
 
 available here:
 <https://bie.ala.org.au/species/https://biodiversity.org.au/afd/taxa/ac61fd14-4950-4566-b384-304bd99ca75f>
 
-acquired 18-10-2023 with no data exclusions.
-Renamed (Speciescommonname)DD-MM-YY i.e. Platypus18-10-23
+acquired 18-10-2023 with no data exclusions. Renamed
+(Speciescommonname)DD-MM-YY i.e. Platypus18-10-23
 
 ## Rivers of Australia & NZ Data
+
 Rivers Data: Available through Food and Agriculture Organization of the
-United Nations: /AQUASTAT/Rivers of Australia and New Zealand
-In ERSI data format (geospatial data)
+United Nations: /AQUASTAT/Rivers of Australia and New Zealand In ERSI
+data format (geospatial data)
 
 available here:
 <https://data.apps.fao.org/catalog/iso/6a53d768-1e20-46ea-92a8-c4040286057d>
 
-
 ## Environmental Variables and BioClim Raster Data
-Environment Data:
-Environment data available through raster package
+
+Environment Data: Environment data available through raster package
+
 ```{r}
 # Get Environment Data
 env <- raster::getData(name = "worldclim", res = 10, var = "bio")
 ```
 
-
 # Data wrangling
-
-[R chunks and prose which:] [Tidies up your raw data, outputs
-tidied_data.csv] [Cleans up your tidied data, outputs cleaned_data.csv]
 
 ## Rivers Data
 
+```{r}
+SortedRivers <- read.csv("processed_data/SortedRivers.csv")
+```
 
+## Platypus Data
+
+```{r}
+platypus <- read.csv("processed_data/platypus.csv")
+```
 
 ## Wrangling Environmental Variable Data
+
 Environmental data
+
 ```{r}
 # Trim down the environmental layer to frame data better, include Australia only
 env <- crop(env, extent(110, 155, -45, -8))
@@ -141,8 +163,8 @@ bioclimVariables <-data.frame(
 print(bioclimVariables)
 ```
 
-
 # Sanity checks
+
 ## Environment Sanity Checks
 
 ```{r}
@@ -161,12 +183,15 @@ plot(env[[1]], main = bioclimVariables$Name[1])
 ## Platypus Sanity Checks
 
 ```{r}
+# Use naturalEarth library to give a map outline of Australia
 australia <- ne_countries(country = "Australia", returnclass = "sf")
 
+# Create blank map of Australia
 map <- ggplot() +
   geom_sf(data = australia, fill = "lightblue") +
   theme_void()
 
+# Plot our platypus observations onto NaturalEarth map
 map_with_points <- map +
   geom_point(data = platypus, aes(x = decimalLongitude, y = decimalLatitude), size = 0.1) +
   ggtitle("Platypus Observations from ALA")
@@ -177,21 +202,22 @@ print(map_with_points)
 ## River Coordinate Point Extraction & Sanity Checks
 
 ```{r}
-# # Look at rivers Data
-# Plot points to ensure large amount of rivers in australia contained within dataset
-# And overlay platypus sightings to ensure most areas are located close to findable river
+# Plot points to ensure large amount of rivers in Australia contained within dataset
+# And overlay platypus sightings to ensure most areas are located close to river
 
+# Reuse NaturalEarth map
 rivers_map_with_points <- map +
   geom_point(data = SortedRivers, aes(x = decimalLongitude, y = decimalLatitude), size = 0.1) +
-  geom_point(data = platypus, aes(x = decimalLongitude, y = decimalLatitude), size = 0.1, colour = 'red')
+  geom_point(data = platypus, aes(x = decimalLongitude, y = decimalLatitude), size = 0.1, colour = 'red') 
 
 print(rivers_map_with_points)
 ```
-
+Red points are observed platypus sightings from ALA.Black points are coordinates along rivers, and are attached with the river name.
 
 # Addressing the questions/aims
 
 ## Creating a bioclim model
+
 ```{r}
 # Create DF with only required data
 platypusPresenceDF <- platypus %>% 
@@ -227,6 +253,14 @@ platypus.bc <- enmtools.bc(platypusENM, env, test.prop = 0.3)
 interactive.plot.enmtools.model(platypus.bc)
 ```
 
+To see model, untick training points.
+
+Lighter points represent areas with a higher environmental suitability
+for platypus habitation. The areas of habitation roughly follow the
+Great Dividing Range, where platypus are more suited to the cooler,
+wetter east side of the mountian range.
+
+Failings of the model: If we compare our model to the observations
 
 ```{r}
 # Show BioClim Response Plots
@@ -238,56 +272,93 @@ interactive.plot.enmtools.model(platypus.bc)
 
 Understanding Bioclim Plots:
 
-The x axis represents the particular condition/variable, for example, Annual Mean Temperature.
+The x axis represents the particular condition/variable, for example,
+Annual Mean Temperature.
 
-Each plot tests the climatic variable in relation to the occurrence of platypus.
-When the red axis is high (close to 1), it represents a high presence of platypus occurring in said condition.
+Each plot tests the climatic variable in relation to the occurrence of
+platypus. When the red axis is high (close to 1), it represents a high
+presence of platypus occurring in said condition.
 
-When the green plot is closer to 1, it represents areas of Australia's environment which fits the variable condition, but does not have a high presence of platypus. If the green plot is close to or at 0, it mean that Australia has no environments that fit this condition.
+When the green plot is closer to 1, it represents areas of Australia's
+environment which fits the variable condition, but does not have a high
+presence of platypus. If the green plot is close to or at 0, it mean
+that Australia has no environments that fit this condition.
 
-The blue plot is our models prediction of finding platypus in this environment, when all other climatic conditions are held at their mean.
+The blue plot is our models prediction of finding platypus in this
+environment, when all other climatic conditions are held at their mean.
 
+### Annual Mean Temperature (C\*100)
 
-### Annual Mean Temperature (C*100)
 ```{r}
 platypus.bc$response.plots[1]
 ```
-This plot is telling us that platypus are most likely to be found in environments where the annual mean temperature is below 20$^\circ$C, with an optimal temperature around 15$^\circ$C.
 
-There are no environments in Australia that have a mean temperature lower than 10$^\circ$C
+This plot is telling us that platypus are most likely to be found in
+environments where the annual mean temperature is below 20$^\circ$C,
+with an optimal temperature around 15$^\circ$C.
 
+There are no environments in Australia that have a mean temperature
+lower than 10$^\circ$C
 
-### Max Temperature of Warmest Month (C*100)
+### Max Temperature of Warmest Month (C\*100)
+
 ```{r}
 platypus.bc$response.plots[5]
 ```
 
-In the warmest month, platypus are not found in any environments where the temperature excedes 33$^\circ$C. They are found in all environments where the temperature is lower than 35$^\circ$C
+In the warmest month, platypus are not found in any environments where
+the temperature excedes 33$^\circ$C. They are found in all environments
+where the temperature is lower than 35$^\circ$C
 
+### Mean Temperature of Wettest Quarter (C\*100)
 
-### Mean Temperature of Wettest Quarter (C*100)
 ```{r}
 platypus.bc$response.plots[8]
 ```
-This plot shows what appears to be two different groups of environments. One where platypus exist and the wettest quarter of the year's average temperature is just less than 10$^\circ$C (note than no colder environments exist in Australia), and one where the wettest quaters mean temperatures is around 22$^\circ$C.
 
-There are two important things to note here: There is little area of Australian environmental conditions in between these two groups, and there is a large area of environment with no platypus, and a much higher mean temperature during the wettest month.
+This plot shows what appears to be two different groups of environments.
+One where platypus exist and the wettest quarter of the year's average
+temperature is just less than 10$^\circ$C (note than no colder
+environments exist in Australia), and one where the wettest quaters mean
+temperatures is around 22$^\circ$C.
 
-What is going on here comes down to geography and precipiation. In the North (North QLD area) where monsoon conditions are present, the wettest quater of the year is around summer, which is also the hottest. Further south, in NSW and Vic, the wettest months of the year is around winter, which is much colder. Finally, the large platypus-absent hot area would be Australia's arid, dry interior, which has its wettest months in summer.
+There are two important things to note here: There is little area of
+Australian environmental conditions in between these two groups, and
+there is a large area of environment with no platypus, and a much higher
+mean temperature during the wettest month.
 
-This plot is useful in highlighting a flaw in the bioclim model. It is less robust than a model such as GLM (Generalized Linear Modelling), which may be able to account for the differing groups Regardless, for the scope of this project, bioclim is the more appropriate due to its less complex and computationally challenging nature.
+What is going on here comes down to geography and precipiation. In the
+North (North QLD area) where monsoon conditions are present, the wettest
+quater of the year is around summer, which is also the hottest. Further
+south, in NSW and Vic, the wettest months of the year is around winter,
+which is much colder. Finally, the large platypus-absent hot area would
+be Australia's arid, dry interior, which has its wettest months in
+summer.
+
+This plot is useful in highlighting a flaw in the bioclim model. It is
+less robust than a model such as GLM (Generalized Linear Modelling),
+which may be able to account for the differing groups Regardless, for
+the scope of this project, bioclim is the more appropriate due to its
+less complex and computationally challenging nature.
 
 ### Other Observations
 
-Platypus can withstand a decently wide range of climates, being found in Australia’s coldest environments (BIO1), but also in the warmer of regions of Queensland, all the way up to Cape York (Barungguan). Being aquatic, they are found commonly in climates with decent rainfall around all months. Platypus are found more commonly in climates with less fluctuation in monthly temperatures (BIO3) and less temperature seasonality (BIO4).
-
+Platypus can withstand a decently wide range of climates, being found in
+Australia's coldest environments (BIO1), but also in the warmer of
+regions of Queensland, all the way up to Cape York (Barungguan). Being
+aquatic, they are found commonly in climates with decent rainfall around
+all months. Platypus are found more commonly in climates with less
+fluctuation in monthly temperatures (BIO3) and less temperature
+seasonality (BIO4).
 
 ## Training Evaluation
+
 ```{r}
 platypus.bc$training.evaluation
 ```
 
 ## Platypus Suitability Locator
+
 Getting input to find platypus suitability
 
 ```{r}
@@ -303,12 +374,18 @@ suitability_value <- as.numeric(suitability_value)
 cat("Locations suitability value: ", suitability_value)
 ```
 
-Of course, this is modeled likelihood of a complex living organism, in an overwhelmingly complex living ecosystem. The model does not take into account human interference, such as daming, pollution, hunting, urbanisation and environmental destruction, all of which have been known to negatively impact platypus presence.
+Of course, this is modeled likelihood of a complex living organism, in
+an overwhelmingly complex living ecosystem. The model does not take into
+account human interference, such as daming, pollution, hunting,
+urbanisation and environmental destruction, all of which have been known
+to negatively impact platypus presence.
 
-The best way to utelise the suitability function is through relative comparison. Try out a few locations, and have a look what the function determines is more suitable out of the options.
-
+The best way to utelise the suitability function is through relative
+comparison. Try out a few locations, and have a look what the function
+determines is more suitable out of the options.
 
 ## Local River Finder
+
 ```{r}
 # Current Location nearest river
 
@@ -336,8 +413,6 @@ nearestRiver <- function(lat1, lon1, lat2, lon2) {
 }
 ```
 
-
-
 ```{r}
 # Calculate distances and find the nearest point
 distances <- sapply(1:nrow(SortedRivers), function(i) {
@@ -359,7 +434,6 @@ cat("Nearest River:\n",
 ```
 
 ## Where else could we go?
-
 
 # References
 
