@@ -19,8 +19,8 @@ editor_options:
 
 # Word/figure count
 
-Words: [The number of words in your document, calculated using the
-word_count() function at the end of this document] Figures: 7
+Words: 
+Figures: 7
 
 # Location on GitHub
 
@@ -28,7 +28,7 @@ word_count() function at the end of this document] Figures: 7
 
 # Introduction
 
-## What is ENM? and why BioClim?
+## What is ENM?
 ENM (Environmental Niche Modeling), commonly referred to as Species Distribution Modelling (SDM) is the use of computational models to calculate habitat suitability for a particular species, and thus where they may be found. 
 
 There are a variety of approaches a model can take I have selected to use BioClim, which inputs geographic observation data of platypus, then finds key relations of presence and absence with a number of climatic variables [Booth et.al, 2013]. The model then gives each square on a grid map of Australia a score, whereby which higher values indicate more suitable conditions, and lower values represent less suitable conditions.
@@ -119,13 +119,14 @@ env <- raster::getData(name = "worldclim", res = 10, var = "bio")
 Data cleaning can be found on the github linked at the top, or here:
 [https://github.com/JackRicho/DS4B-final-project/blob/main/data_cleaning.html]
 
-From its raw form, the rivers dataset was extracted so that each point, originally in list form, is presented in a table with its river name attatched to it
+From its raw form, the rivers dataset was extracted so that each point separated from its list and associated with river name.
+
 ```{r}
 SortedRivers <- read.csv("processed_data/SortedRivers.csv")
 ```
 
 ## Platypus Data
-Data was cleaned to remove high location uncertianty values, duplicate entries, and absence records.
+Data was cleaned to remove high location uncertainty values, duplicate entries, and absence records.
 ```{r}
 platypus <- read.csv("processed_data/platypus.csv")
 ```
@@ -136,40 +137,9 @@ Environmental data
 ```{r}
 # Trim down the environmental layer to frame data better, include Australia only
 env <- crop(env, extent(110, 155, -45, -8))
-```
 
+bioclimVariables <- read.csv("processed_data/bioclimVariables.csv")
 
-```{r include=FALSE}
-bioclimVariables <-data.frame(
-  BIO = c(
-    "BIO1", "BIO2", "BIO3", "BIO4", "BIO5", "BIO6", "BIO7", "BIO8", "BIO9", 
-    "BIO10", "BIO11", "BIO12", "BIO13", "BIO14", "BIO15", "BIO16", "BIO17", 
-    "BIO18", "BIO19"),
-  Name = c(
-    "Annual Mean Temperature (C*100)", 
-    "Mean Diurnal Range (Mean of monthly (max temp - min temp)) (C*100)", 
-    "Isothermality (BIO2/BIO7) (×100)", 
-    "Temperature Seasonality (standard deviation ×100)", 
-    "Max Temperature of Warmest Month (C*100)", 
-    "Min Temperature of Coldest Month (C*100)", 
-    "Temperature Annual Range (BIO5-BIO6) (C*100)", 
-    "Mean Temperature of Wettest Quarter (C*100)", 
-    "Mean Temperature of Driest Quarter (C*100)", 
-    "Mean Temperature of Warmest Quarter (C*100)", 
-    "Mean Temperature of Coldest Quarter (C*100)", 
-    "Annual Precipitation (mm)", 
-    "Precipitation of Wettest Month (mm)", 
-    "Precipitation of Driest Month (mm)", 
-    "Precipitation Seasonality (Coefficient of Variation) (mm)", 
-    "Precipitation of Wettest Quarter (mm)", 
-    "Precipitation of Driest Quarter (mm)", 
-    "Precipitation of Warmest Quarter (mm)", 
-    "Precipitation of Coldest Quarter (mm)")
-)
-```
-
-
-```{r}
 print(bioclimVariables)
 ```
 
@@ -197,7 +167,7 @@ map <- ggplot() +
 # Plot our platypus observations onto NaturalEarth map
 map_with_points <- map +
   geom_point(data = platypus, aes(x = decimalLongitude, y = decimalLatitude), size = 0.1) +
-  ggtitle("Platypus Observations from ALA")
+  ggtitle("Platypus Observations from Atlas of Living Australia")
 
 print(map_with_points)
 ```
@@ -215,7 +185,7 @@ rivers_map_with_points <- map +
 
 print(rivers_map_with_points)
 ```
-Red points are observed platypus sightings from ALA. Black points are coordinates along the rivers.
+Red points are observed platypus sightings from Atlas of Living Australua. Black points are coordinates along the rivers.
 
 # Addressing the questions/aims
 
@@ -369,7 +339,7 @@ suitability_value <- as.numeric(suitability_value)
 cat("Locations suitability value: ", suitability_value)
 ```
 
-Of course, this is modeled likelihood of a complex living organism, in
+Of course, this is a model of a complex living organism, in
 an overwhelmingly complex living ecosystem. The model does not take into
 account human interference, such as daming, pollution, hunting,
 urbanisation and environmental destruction, all of which have been known
