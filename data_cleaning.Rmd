@@ -121,7 +121,7 @@ for (x in 1:nrow(rivers)) {
   SortedRivers <- rbind(SortedRivers, tempDF)
 
   # Uncomment below code to see progress
-  cat("Progress:   ", x, " of ", nrow(rivers), "\n")
+#  cat("Progress:   ", x, " of ", nrow(rivers), "\n")
   }
 }
 
@@ -131,7 +131,7 @@ write.csv(SortedRivers, "processed_data/SortedRivers.csv")
 # SortedRivers <- read.csv("processed_data/SortedRivers.csv")
 
 # Plot points by area
-ggplot(SortedRivers, aes(x = decimalLongitude, y = decimalLatitude, colour = MAJ_NAME)) +
+ggplot(SortedRivers, aes(x = decimalLatitude, y = decimalLongitude, colour = MAJ_NAME)) +
   geom_point() +
   ggtitle("Australia River Points by Region") +
   labs(color = "Region") +
