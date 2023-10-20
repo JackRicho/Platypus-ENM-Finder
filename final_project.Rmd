@@ -20,18 +20,31 @@ editor_options:
 # Word/figure count
 
 Words: [The number of words in your document, calculated using the
-word_count() function at the end of this document] Figures: [The number
-of figures in your document. You can just count these]
+word_count() function at the end of this document] Figures: 7
 
 # Location on GitHub
 
 <https://github.com/JackRicho/DS4B-final-project>
 
-# Data Description
+# Introduction
 
+## What is ENM? and why BioClim?
+ENM (Environmental Niche Modeling), commonly referred to as Species Distribution Modelling (SDM) is the use of computational models to calculate habitat suitability for a particular species, and thus where they may be found. 
+
+There are a variety of approaches a model can take I have selected to use BioClim, which inputs geographic observation data of platypus, then finds key relations of presence and absence with a number of climatic variables [Booth et.al, 2013]. The model then gives each square on a grid map of Australia a score, whereby which higher values indicate more suitable conditions, and lower values represent less suitable conditions.
+
+BioClim is not the only approach to SDM. More complex methods, such as Generalized Linear Modelling, and less complex methods, such as Domain, are available. Additionally, alternative approaches exist, like Random Forests, which is based on decision trees rather than observation data, making it, in theory, possible to model species of which limited observations exist, such as introduced species. 
+
+For this project, BioClim is the most appropriate option, as it is designed not to predict places of new sightings, but to calculate the relative suitability of habitats, assisting in identifying areas of likely observation.
+
+## Why Platypus?
+Platypus are nocturnal aquatic mammals (monotremes) that spend large amounts of time within burrows accessible only underground and underwater [Biano et. al, 2019]. As such, the best time to see them is nearly exclusively at night (or early mornings and late evenings in winter). To add to this, they are beautiful creatures and some of the most morphologically unique on the world. It has been my project for the year to spot one in the wild, and ENM can help do so.
+
+
+# Data Description
 This project uses 3 datasets:
 
-Atlas of Living Australias most current (as of 18/10/22) platypus
+Atlas of Living Australia's (ALA) most current (as of 18/10/22) platypus
 occurrence records with no exclusions to data. Collected through a
 variety of research, conservation work and citizen science
 
@@ -47,24 +60,15 @@ drainage direction layer and a stream network layer.
 
 This project has 2 aims:
 
--   To create a species distribution model of Platypus using the bioclim
+-   Primary Aim: To create a species distribution model of Platypus using the bioclim
     model.
 
--   To create a tool whereby users can input a location and they are
+-   Secondary Aim: To create a tool whereby users can input a location and they are
     told the suitability of that place to platypus habitation, and are
-    told the nearest river where they may be able to find platypus
+    told a nearby river where they may be able to find platypus
     
-## What is ENM? and why BioClim?
-ENM (Environmental Niche Modeling), commonly referred to as Species Distribution Modelling (SDM) is the use of computational models to calculate habitat suitability for a particular species, and thus where they may be found. 
-
-There are a variety of approaches a model can take I have selected to use BioClim, which inputs geographic observation data of platypus, then finds key relations of presence and absence with a number of climatic variables. The model then gives each square on a grid map of Australia a score, whereby which higher values indicate more suitable conditions, and lower values represent less suitable conditions.
-
-BioClim is not the only approach to SDM. More complex methods, such as Generalized Linear Modelling, and less complex methods, such as Domain, are available. Additionally, alternative approaches exist, like Random Forests, which is based on decision trees rather than observation data, making it, in theory, possible to model species of which limited observations exist, such as introduced species. 
-
-For this project, BioClim is the most appropriate option, as it is designed not to predict places of new sightings, but to calculate the relative suitability of habitats, assisting in identifying areas of likely observation.
 
 
-# Loading Libraries
 
 ```{r}
 library(sf)
@@ -76,8 +80,6 @@ library(tidyverse)
 library(leaflet)
 library(terra)
 library(rnaturalearth)
-
-print("Libraries Loaded")
 ```
 
 # Raw data
@@ -112,15 +114,18 @@ env <- raster::getData(name = "worldclim", res = 10, var = "bio")
 ```
 
 # Data wrangling
-
 ## Rivers Data
 
+Data cleaning can be found on the github linked at the top, or here:
+[https://github.com/JackRicho/DS4B-final-project/blob/main/data_cleaning.html]
+
+From its raw form, the rivers dataset was extracted so that each point, originally in list form, is presented in a table with its river name attatched to it
 ```{r}
 SortedRivers <- read.csv("processed_data/SortedRivers.csv")
 ```
 
 ## Platypus Data
-
+Data was cleaned to remove high location uncertianty values, duplicate entries, and absence records.
 ```{r}
 platypus <- read.csv("processed_data/platypus.csv")
 ```
@@ -128,11 +133,13 @@ platypus <- read.csv("processed_data/platypus.csv")
 ## Wrangling Environmental Variable Data
 
 Environmental data
-
 ```{r}
 # Trim down the environmental layer to frame data better, include Australia only
 env <- crop(env, extent(110, 155, -45, -8))
+```
 
+
+```{r include=FALSE}
 bioclimVariables <-data.frame(
   BIO = c(
     "BIO1", "BIO2", "BIO3", "BIO4", "BIO5", "BIO6", "BIO7", "BIO8", "BIO9", 
@@ -159,7 +166,10 @@ bioclimVariables <-data.frame(
     "Precipitation of Warmest Quarter (mm)", 
     "Precipitation of Coldest Quarter (mm)")
 )
+```
 
+
+```{r}
 print(bioclimVariables)
 ```
 
@@ -169,15 +179,8 @@ print(bioclimVariables)
 
 ```{r}
 # Check Environment Data
-
-# To see all plots, uncomment below code
-# for (x in 1:19) {
-#   plot(env[[x]], main = bioclimVariables$Name[x])
-# }
-
 plot(env[[1]], main = bioclimVariables$Name[1])
-  # Framing is good
-  # Environmental factors look good
+  # Framing is appropriate
 ```
 
 ## Platypus Sanity Checks
@@ -212,7 +215,7 @@ rivers_map_with_points <- map +
 
 print(rivers_map_with_points)
 ```
-Red points are observed platypus sightings from ALA.Black points are coordinates along rivers, and are attached with the river name.
+Red points are observed platypus sightings from ALA. Black points are coordinates along the rivers.
 
 # Addressing the questions/aims
 
@@ -226,7 +229,6 @@ platypusPresenceDF <- platypus %>%
 
 
 # We package each lineage up in an ENMtools species object
-
 # Creates empty object with slots for various values
 platypusENM <- enmtools.species()
 
@@ -241,6 +243,13 @@ platypusENM <- check.species(platypusENM)
 
 ## BioClim Model
 
+```{r}
+# Use enmTools to create a bioclim model
+platypus.bc <- enmtools.bc(platypusENM, env, test.prop = 0.3)
+  # Bioclim uses the presence of observed instances and analyses them in relation to our 19 climatic variables to create a suitability plot
+```
+
+
 ### Response Plots
 
 Understanding Bioclim Plots:
@@ -248,16 +257,16 @@ Understanding Bioclim Plots:
 The x axis represents the particular condition/variable, for example,
 Annual Mean Temperature.
 
-Each plot tests the climatic variable in relation to the occurrence of
+Presence: Each plot tests the climatic variable in relation to the occurrence of
 platypus. When the red axis is high (close to 1), it represents a high
 presence of platypus occurring in said condition.
 
-When the green plot is closer to 1, it represents areas of Australia's
+Background: When the green plot is closer to 1, it represents areas of Australia's
 environment which fits the variable condition, but does not have a high
 presence of platypus. If the green plot is close to or at 0, it mean
 that Australia has no environments that fit this condition.
 
-The blue plot is our models prediction of finding platypus in this
+Suitability: The blue plot is our models prediction of finding platypus in this
 environment, when all other climatic conditions are held at their mean.
 
 ### Annual Mean Temperature (C\*100)
@@ -309,18 +318,18 @@ be Australia's arid, dry interior, which has its wettest months in
 summer.
 
 This plot is useful in highlighting a flaw in the bioclim model. It is
-less robust than a model such as GLM (Generalized Linear Modelling),
-which may be able to account for the differing groups Regardless, for
+less complex than a model such as GLM (Generalized Linear Modelling),
+which may be able to account for the differing groups regardless, for
 the scope of this project, bioclim is the more appropriate due to its
-less complex and computationally challenging nature.
+less complex and computationally challenging nature. [Warren, et.al, 2021]
 
 ### Other Observations
 
 Platypus can withstand a decently wide range of climates, being found in
 Australia's coldest environments (BIO1), but also in the warmer of
-regions of Queensland, all the way up to Cape York (Barungguan). Being
+regions of Queensland, all the way up to Cape York. Being
 aquatic, they are found commonly in climates with decent rainfall around
-all months. Platypus are found more commonly in climates with less
+all months [Hawke et.al, 2019]. Platypus are found more commonly in climates with less
 fluctuation in monthly temperatures (BIO3) and less temperature
 seasonality (BIO4).
 
@@ -328,11 +337,6 @@ seasonality (BIO4).
 ### Interactive Map of BioClim Model
 
 ```{r}
-# Use enmTools to create a bioclim model
-platypus.bc <- enmtools.bc(platypusENM, env, test.prop = 0.3)
-  # Bioclim uses the presence of observed insances and analyses them in relation to our 19 climatic variables to create a suitability plot
-  # test.prop sets aside 30% of our data, allowing us to assess the accuracy of the model
-
 # Create an interactive plot to view the model
 interactive.plot.enmtools.model(platypus.bc)
 ```
@@ -341,18 +345,12 @@ To see model, untick training points.
 
 Lighter points represent areas with a higher environmental suitability
 for platypus habitation. The areas of habitation roughly follow the
-Great Dividing Range, where platypus are more suited to the cooler,
+Great Dividing Range/East Coast, where platypus are more suited to the cooler,
 wetter east side of the mountian range.
 
 Failings of the model: If we compare our model to the observations of platypus, we can see for example, that tasmania has seen many observations, but is ranked as relatively unsuitable by the model.
 
 My guess, is that this is due to a weighting inaccuracies. Platypus, being aquatic care relatively little about precipitation, as long as rivers do not dry up. 7 of the 19 bioclim variables relate to precipitation, possibly over relying on the importance of rainfall in the model. That being said, the model still satisfies the aim of building a species distribution model. 
-
-## Training Evaluation
-
-```{r}
-platypus.bc$training.evaluation
-```
 
 ## Platypus Suitability Locator
 
@@ -408,7 +406,6 @@ nearestRiver <- function(lat1, lon1, lat2, lon2) {
   return(distance)
 }
 
-
 # Calculate distances and find the nearest point
 distances <- sapply(1:nrow(SortedRivers), function(i) {
   nearestRiver(inputLatitude, inputLongitude, SortedRivers$decimalLatitude[i], SortedRivers$decimalLongitude[i])
@@ -428,8 +425,15 @@ cat("Locations suitability value: ", suitability_value, "\n",
     "Distance (in km) to River:", distances[nearest_point_index], "\n")
 ```
 
-By altering the values of decimalLatitude and decimalLongitude, users can input their locations, and find the quantitative modelled suitability of anywhere in Australia. Assisting in their search for Australias most elusive aquatic monotreme.
+By altering the values of decimalLatitude and decimalLongitude, users can input their locations, and find the quantitative modeled suitability of anywhere in Australia. Assisting in their search for Australia's most elusive aquatic monotreme.
 
 # References
 
-[References you have cited throughout your text]
+- Booth, T.H., Nix, H.A., Busby, J.R. and Hutchinson, M.F. (2014), bioclim: the first species distribution modelling package, its early applications and relevance to most current MaxEnt studies. Diversity Distrib., 20: 1-9. https://doi.org/10.1111/ddi.12144
+
+- Gilad Bino, Richard T Kingsford, Michael Archer, Joanne H Connolly, Jenna Day, Kimberly Dias, David Goldney, Jaime Gongora, , The platypus: evolutionary history, biology, and an uncertain future, Journal of Mammalogy, Volume 100, Issue 2, 24 April 2019, Pages 308–327, https://doi.org/10.1093/jmammal/gyz058
+
+- Warren, D.L., Matzke, N.J., Cardillo, M., Baumgartner, J.B., Beaumont, L.J., Turelli, M., Glor, R.E., Huron, N.A., Simões, M., Iglesias, T.L., Piquet, J.C. and Dinnage, R. (2021), ENMTools 1.0: an R package for comparative ecological biogeography. Ecography, 44: 504-511. https://doi.org/10.1111/ecog.05485
+
+- Tahneal Hawke, Gilad Bino, Richard T. Kingsford, A silent demise: Historical insights into population changes of the iconic platypus (Ornithorhynchus anatinus), Global Ecology and Conservation, Volume 20, 2019, ISSN 2351-9894, https://doi.org/10.1016/j.gecco.2019.e00720.
+
