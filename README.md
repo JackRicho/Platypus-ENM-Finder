@@ -1,5 +1,3 @@
-<p align="center">
-
 ![capturePlatypusPoster](https://github.com/JackRicho/Platypus-ENM-Finder/assets/141710350/36a197ad-b237-41c0-9e9e-8e14647817f2)
 
 This project was my final submission for the ANU course: Data Science For Biologists. The brief was open, only requiring use of large, messy datasets and analysis/plotting using R.
